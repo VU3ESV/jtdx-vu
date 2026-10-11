@@ -5,6 +5,9 @@
 // Without a grid, the callsign's FCC licence state from us_call_states.txt
 // (tools/build_us_call_states.py; a newer copy in the data directory wins
 // over the built-in one). Loaded on first use.
+// Canada the same way (findCanada): the grid from ca_grid_provinces.txt
+// (Natural Earth boundaries, tools/build_ca_grid_provinces.py), else the
+// province the callsign's prefix belongs to (VE3 -> ON, VO1 -> NL, VY2 -> PE).
 #ifndef USSTATES_H
 #define USSTATES_H
 
@@ -17,6 +20,7 @@ class UsStates
 {
 public:
   QString find (QString const& call, QString const& grid);
+  QString findCanada (QString const& call, QString const& grid);
 
 private:
   void load ();
@@ -24,6 +28,7 @@ private:
 
   bool loaded_ {false};
   QHash<QString, QString> grids_;   // "EM78" -> "KY-IN-OH"
+  QHash<QString, QString> caGrids_; // "FN25" -> "QC-ON"
   QByteArray calls_;                // sorted "CALL ST\n" lines
   QVector<int> offsets_;            // start of each line in calls_
 };

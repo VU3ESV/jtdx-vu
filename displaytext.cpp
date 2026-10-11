@@ -932,9 +932,11 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
             }
             // JTDX-VU: Show US State - U.S.A.:FL, from the grid in the
             // message first, else the call's FCC licence state
-            if (displayUSState_ && items[1] == "K") {
+            // and Canada:ON from the grid, else the callsign's prefix
+            if (displayUSState_ && (items[1] == "K" || items[1] == "VE")) {
                 static UsStates usStates;
-                QString const st = usStates.find(checkCall, grid);
+                QString const st = items[1] == "K" ? usStates.find(checkCall, grid)
+                                                   : usStates.findCanada(checkCall, grid);
                 if (!st.isEmpty()) cntry += ":" + st;
             }
         }

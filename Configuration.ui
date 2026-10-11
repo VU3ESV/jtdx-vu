@@ -390,10 +390,10 @@
             <item row="3" column="2">
              <widget class="QCheckBox" name="usState_check_box">
               <property name="toolTip">
-               <string>For U.S.A. stations add the state: from the grid in the message when there is one (several states when the grid square covers more than one), otherwise from the callsign's FCC licence address.</string>
+               <string>For U.S.A. stations add the state, for Canada the province or territory: from the grid in the message when there is one (several when the grid square covers more than one), otherwise from the callsign - its FCC licence address for U.S.A., its prefix for Canada (VE3 = ON).</string>
               </property>
               <property name="text">
-               <string>Show US &amp;State</string>
+               <string>Show US &amp;State / VE province</string>
               </property>
              </widget>
             </item>

@@ -271,6 +271,14 @@ or Pi 5 is recommended.
   (`tools/build_us_call_states.py`, the same rules as DXCA's WAS lookup). A
   newer `us_call_states.txt` in the log directory overrides the built-in one.
   Asked for by KK4CDK (Miguel), after the option in JTDX 2.2.160.
+  Canadian stations get their province or territory the same way
+  (`Canada:ON`, since the next release; the box now reads *Show US State / VE
+  province*): from the grid first (`Canada:QC-ON` for FN25), from Natural Earth's
+  public-domain boundaries (`tools/build_ca_grid_provinces.py`), else from the
+  callsign's prefix - VE/VA 1-9 (VE3 = ON), VO1/VO2 = NL, VY0 = NU, VY1 = YT,
+  VY2 = PE, and the special-event prefixes by the same digits. A station that
+  moved province but kept its call shows its old one when it sends no grid.
+  Also asked for by Miguel KK4CDK.
 - **FlexRadio over VITA-49, no SmartSDR needed** (since v0.7.0). Rig *FlexRadio VITA-49 Slice A..H* with the radio's
   address (e.g. `192.168.1.20:4992`) in the **FlexRadio:** field of
   Settings > Radio — or press **Discover** (since v0.7.4) beside it to find radios on the

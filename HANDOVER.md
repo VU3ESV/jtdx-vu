@@ -46,7 +46,8 @@ Last updated: 2026-10-11
   through a firewall / NAT / VPN), the no-audio reconnect stop, one frequency
   at connect, a clickable ERR box, the "FlexRadio:" box with Discover, Show
   US State, and the QO-100 13cm Club Log / JTTY lookups. Unreleased since
-  v0.7.4: the country column lined up on bold lines (2026-10-11).
+  v0.7.4: the country column lined up on bold lines; Canadian provinces in
+  Show US State (both 2026-10-11).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -267,6 +268,26 @@ Last updated: 2026-10-11
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-11 — Show US State also shows Canadian provinces (for the next release)
+
+- **Asked for by KK4CDK** (Miguel, after thanking for the US states). Manoj: yes.
+- **Grid first:** new `ca_grid_provinces.txt` (1,176 squares, 9.8 KB, built in as a
+  resource) from Natural Earth 1:10m admin-1 (public domain, v5.1.1) by new
+  `tools/build_ca_grid_provinces.py` - same method as the US table: provinces /
+  territories covering at least 2% of the square's Canadian land, largest first
+  (FN25 QC-ON, FO64 NL-QC, FN74 NS, EN82 ON).
+- **Else the prefix** (no licence table needed): VE/VA 1-9 = NS QC ON MB SK AB BC
+  NT NB, VO1/VO2 = NL, VY0 NU, VY1 YT, VY2 PE, special-event prefixes (CF-CK, CZ,
+  VB-VD, VG, VX, XJ-XO) by the VE digit except 8; VE0 (maritime mobile) and VY9
+  give nothing. A station that moved but kept its call shows the old province.
+- **Code:** `UsStates::findCanada` beside `find` (logbook/usstates.cpp); the
+  displaytext hook now covers DXCC prefix "VE" as well as "K". Same tick
+  (`ShowUSState`), relabelled "Show US State / VE province", tooltip updated.
+- **Tested:** a standalone program over 22 cases (all 13 codes, grid vs prefix,
+  RR73 ignored, /P, <hashed>, CG3/XM7/VC8, VE0, a non-Canadian grid) - all as
+  expected; US lookup unchanged (EM78 KY-IN-OH). Builds. Not yet seen on a live
+  Canadian decode, and the longer Settings label not yet looked at (screen locked).
 
 ### 2026-10-11 — Decode window: country column lined up on bold lines (for the next release)
 

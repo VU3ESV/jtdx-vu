@@ -638,6 +638,7 @@ set (TOP_LEVEL_RESOURCES
   cty.dat
   us_grid_states.txt
   us_call_states.txt
+  ca_grid_provinces.txt
   lotw-user-activity.csv
   icons/Darwin/jtdx.iconset/icon_128x128.png
   contrib/decpasses.png
