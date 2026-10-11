@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-10
+Last updated: 2026-10-11
 
 ## Current state
 
@@ -46,7 +46,7 @@ Last updated: 2026-10-10
   through a firewall / NAT / VPN), the no-audio reconnect stop, one frequency
   at connect, a clickable ERR box, the "FlexRadio:" box with Discover, Show
   US State, and the QO-100 13cm Club Log / JTTY lookups. Unreleased since
-  v0.7.4: nothing.
+  v0.7.4: the country column lined up on bold lines (2026-10-11).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -267,6 +267,36 @@ Last updated: 2026-10-10
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-11 — Decode window: country column lined up on bold lines (for the next release)
+
+- **Report (KK4CDK, v0.7.4 on Windows, screenshots):** with Show US State on,
+  the country column of the CQ / 73 lines (drawn bold, stock JTDX) sat ~50 px
+  right of the plain lines - "*Canada" as much as "U.S.A.:MO", so not the
+  state itself. His font's bold is wider than its regular: Windows fakes bold
+  for the fallback of JTDX's default "Courier, 10" by widening each glyph, and
+  the column was placed only by space padding. His stock JTDX (Slice-B
+  instance) shows every line bold, hence aligned; JTDX-VU took its settings
+  from his default JTDX instance. He also asked for "USA:FL" - left as
+  "U.S.A.:FL", which is JTDX 2.2.160's own format (his stock screenshot shows
+  it); the stock "show DXCC prefix" option gives "K:FL". Manoj sent him the
+  font workaround (Settings > General > Decoded Text Font: Consolas / Lucida
+  Console, or bold).
+- **Fix (`displaytext.cpp`):** `setContentFont` measures the widest character
+  cell of the content font in normal / bold / black, upright and italic
+  (`charWidth_`); `appendText` puts a tab stop at `(ft + 26) * charWidth_ + 2`
+  on the line and a tab before the marker + country, so the column starts at
+  the same x whatever the weight. Measured with the same font engine that
+  draws, so a faked bold is accounted for. The tab sits after column 49; the
+  line parsers (`DecodedText`: columns 23-46; the UDP replay: first space from
+  column 35) never reach it. Lines of 50+ characters are unchanged.
+- **Tested** on the Mac with Andale Mono 13 (no bold face, so macOS fakes it)
+  in a throwaway `-r aligntest` copy fed by new `FAKE_TCI_WAVS` in
+  `tools/fake_tci.py` (plays 15 s 12 kHz recordings, one per UTC period, as
+  TCI audio - real FT8 decodes with no radio): installed 0.7.4 had the bold
+  lines' country ~2 px right of the plain ones; the fixed build lines "Spain",
+  "Netherland" and "Italy" (bold) up exactly. Windows' wider faked bold not
+  seen directly.
 
 ### 2026-10-10 — Decoder speed measured: Mac mini vs Pi 5, threads, `-fbounds-check` (no code change)
 

@@ -11,6 +11,9 @@
 #include <QTextCharFormat>
 #include <QFont>
 #include <QTextCursor>
+#include <QTextBlockFormat>
+#include <QFontMetricsF>
+#include <cmath>
 
 #include "Configuration.hpp"
 #include "qt_helpers.hpp"
@@ -114,6 +117,19 @@ void DisplayText::setContentFont(QFont const& font)
   m_charFormat.setFont (font);
   bold_ = font.bold();
   m_charFormat.setFontItalic(false);
+  // JTDX-VU: the country column goes to a tab stop past the widest the decode
+  // can be drawn. Some fonts (Windows' fallback for the default "Courier"
+  // among them) draw bold wider than regular, and the CQ / 73 lines are bold,
+  // so space-padding alone left their country column further right.
+  charWidth_ = 0.;
+  for (auto weight : {QFont::Normal, QFont::Bold, QFont::Black})
+    for (bool italic : {false, true})
+      {
+        QFont f {font};
+        f.setWeight (weight);
+        f.setItalic (italic);
+        charWidth_ = qMax (charWidth_, QFontMetricsF {f}.horizontalAdvance (QString (10, 'W')) / 10.);
+      }
 //  selectAll ();
 /*
   auto cursor = textCursor ();
@@ -236,6 +252,12 @@ void DisplayText::appendText(QString const& text, QString const& bg, QString con
             }
         m_charFormat.setFontStrikeOut(false);
         m_charFormat.setUnderlineStyle(QTextCharFormat::NoUnderline);
+        if (charWidth_ > 0.) {   // JTDX-VU: line the country column up whatever the weight (see setContentFont)
+          QTextBlockFormat bf;
+          bf.setTabPositions ({QTextOption::Tab {std::ceil (charWidth_ * (ft + 26)) + 2., QTextOption::LeftTab}});
+          cursor.mergeBlockFormat (bf);
+          cursor.insertText ("\t", m_charFormat);
+        }
         m_charFormat.setBackground (QColor(servbg));
         m_charFormat.setForeground(QColor(servis_color));
         cursor.insertText (servis.left(1),m_charFormat);

@@ -72,6 +72,7 @@ private:
 
     bool scroll_;
     bool bold_;
+    qreal charWidth_ {0.};   // JTDX-VU: widest character cell of the content font in any weight used
     bool wastx_;
     bool useDarkStyle_;
     bool displayCountryName_;

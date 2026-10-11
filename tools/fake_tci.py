@@ -72,7 +72,42 @@ def audio_frame():
     hdr = struct.pack("<16I", 0, 48000, 3, 0, 0, n * 2, 1, 2, *([0] * 8))
     return hdr + bytes(n * 2 * 4)
 
+# FAKE_TCI_WAVS="a.wav b.wav ..." plays 15 s 12 kHz mono recordings (e.g. WSJT-X's
+# save folder) instead of silence, one per UTC 15 s period in turn, so a client
+# decodes real FT8 without a radio.
+WAVS = []
+def load_wavs():
+    import wave, array
+    for path in os.environ.get("FAKE_TCI_WAVS", "").split():
+        w = wave.open(path)
+        a = array.array("h", w.readframes(w.getnframes()))
+        f = array.array("f", (x / 32768.0 for x in a for _ in range(4)))   # 12 -> 48 kHz
+        WAVS.append(f)
+
+def stream_wavs(c, alive, lock):
+    import array
+    n = 2048
+    hdr = struct.pack("<16I", 0, 48000, 3, 0, 0, n * 2, 1, 2, *([0] * 8))
+    t0 = time.time()
+    sent = 0
+    while alive[0]:
+        t = t0 + sent / 48000.0
+        w = WAVS[int(t // 15) % len(WAVS)]
+        pos = int((t % 15) * 48000)
+        chunk = w[pos:pos + n]
+        out = array.array("f", bytes(n * 2 * 4))
+        for i, x in enumerate(chunk):
+            out[2 * i] = out[2 * i + 1] = x
+        f = hdr + out.tobytes(); m = len(f)
+        ws = bytes([0x82, 127]) + struct.pack(">Q", m) + f if m >= 65536 else bytes([0x82, 126]) + struct.pack(">H", m) + f
+        try:
+            with lock: c.sendall(ws)
+        except OSError: return
+        sent += n
+        time.sleep(max(0.0, t0 + sent / 48000.0 - time.time()))
+
 def stream_audio(c, alive, lock):
+    if WAVS: return stream_wavs(c, alive, lock)
     f = audio_frame(); n = len(f)
     ws = (bytes([0x82, 126]) + struct.pack(">H", n) if n < 65536 else bytes([0x82, 127]) + struct.pack(">Q", n)) + f
     while alive[0]:
@@ -137,6 +172,7 @@ def serve(c):
     alive[0] = alive[1] = False
     log.write("%.3f closed\n" % time.time())
 
+load_wavs()
 s = socket.socket(); s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 s.bind(("127.0.0.1", port)); s.listen(5)
 while True:
