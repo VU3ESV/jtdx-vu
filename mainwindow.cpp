@@ -5502,21 +5502,6 @@ void MainWindow::processMessage(QString const& messages, int position, bool alt,
   DecodedText decodedtext {t2a,this};
 
   bool addWanted = (alt && ctrl);
-  if(!addWanted) {
-//    int nmod=decodedtext.timeInSeconds () % (2*int(m_TRperiod));
-    int nmod = fmod(double(decodedtext.timeInSeconds()),2.0*m_TRperiod);
-//    printf ("periods %d,%f,%d,%s,%d\n",decodedtext.timeInSeconds (),m_TRperiod,nmod,t2.mid(6,4).toStdString().c_str(),tx_message);
-    if (m_txFirst != (nmod!=0) && !tx_message) {
-      m_txFirst=(nmod!=0);
-//      ui->TxMinuteButton->setChecked(m_txFirst);
-//      an attempt to provide stable UDP Reply operation:
-      if(m_txFirst && !ui->TxMinuteButton->isChecked()) ui->TxMinuteButton->click();
-      else if(!m_txFirst && ui->TxMinuteButton->isChecked()) ui->TxMinuteButton->click();
-//      setMinButton();
-      period_changed = true;
-      if(m_transmitting && m_config.write_decoded_debug()) writeToALLTXT("Tx halted: period changed via message click");
-    }
-  }
 
   auto t3 = decodedtext.string ().left(47);
   auto t4 = t3.replace (QRegularExpression {" CQ ([A-Z]{1,2}|[0-9]{3,3}) "}, " CQ_\\1 ").split (" ", SkipEmptyParts);
@@ -5538,12 +5523,34 @@ void MainWindow::processMessage(QString const& messages, int position, bool alt,
     return;
   }
 
-  if (!Radio::is_callsign (hiscall) // not interested if not from QSO partner
-      && !(t4.size () == 7          // unless it is of the form
+  bool const from_call = Radio::is_callsign (hiscall) // not interested if not from QSO partner
+      || (t4.size () == 7          // unless it is of the form
            && (t4.at (5) == m_baseCall // "<our-call> 73"
                || t4.at (5).startsWith (m_baseCall + '/')
                || t4.at (5).endsWith ('/' + m_baseCall))
-           && t4.at (6) == "73"))
+           && t4.at (6) == "73");
+
+  // JTDX-VU: only a decode (first field the UTC time, not a separator's dashes)
+  // moves the Tx period, and under AutoSeq only one we go on to answer: with
+  // Enable Tx on, the period button clears the DX call and calls CQ
+  bool const decode_line = QRegularExpression {"^\\d{4}(\\d{2})?$"}.match (t4.at (0)).hasMatch ();
+  if(decode_line && (from_call || !m_autoseq)) {
+//    int nmod=decodedtext.timeInSeconds () % (2*int(m_TRperiod));
+    int nmod = fmod(double(decodedtext.timeInSeconds()),2.0*m_TRperiod);
+//    printf ("periods %d,%f,%d,%s,%d\n",decodedtext.timeInSeconds (),m_TRperiod,nmod,t2.mid(6,4).toStdString().c_str(),tx_message);
+    if (m_txFirst != (nmod!=0) && !tx_message) {
+      m_txFirst=(nmod!=0);
+//      ui->TxMinuteButton->setChecked(m_txFirst);
+//      an attempt to provide stable UDP Reply operation:
+      if(m_txFirst && !ui->TxMinuteButton->isChecked()) ui->TxMinuteButton->click();
+      else if(!m_txFirst && ui->TxMinuteButton->isChecked()) ui->TxMinuteButton->click();
+//      setMinButton();
+      period_changed = true;
+      if(m_transmitting && m_config.write_decoded_debug()) writeToALLTXT("Tx halted: period changed via message click");
+    }
+  }
+
+  if (!from_call)
     {
       qDebug () << "Not processing message - hiscall:" << hiscall << "hisgrid:" << hisgrid;
 //SNR from free messages to report for operation with special callsigns in the manual mode
