@@ -286,8 +286,14 @@ Last updated: 2026-10-11
   (`ShowUSState`), relabelled "Show US State / VE province", tooltip updated.
 - **Tested:** a standalone program over 22 cases (all 13 codes, grid vs prefix,
   RR73 ignored, /P, <hashed>, CG3/XM7/VC8, VE0, a non-Canadian grid) - all as
-  expected; US lookup unchanged (EM78 KY-IN-OH). Builds. Not yet seen on a live
-  Canadian decode, and the longer Settings label not yet looked at (screen locked).
+  expected; US lookup unchanged (EM78 KY-IN-OH). Builds.
+- **Seen in the app** (2026-10-11, local bundle of `778f2e5a`): ft8sim signals
+  (CQ VE3ABC FN25, W1AW VE7XYZ -10, CQ VA2QQ FO64, K1ABC VO1AA R-05, CQ VY2ZZ
+  FN86, CQ CG3EV FN03, two non-Canadian) mixed into one 15 s wav and played
+  through `FAKE_TCI_WAVS` to a throwaway `-r aligntest` copy: the Rx Frequency
+  pane showed "Canada:QC-ON" (grid) and "Canada:BC" (prefix), and the bold and
+  plain lines' country columns started at the same x. The Settings label "Show
+  US State / VE province" fits in General > Display.
 
 ### 2026-10-11 — Decode window: country column lined up on bold lines (for the next release)
 
@@ -3255,9 +3261,14 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       the Mac mini and the MacBook-over-VPN are both on other subnets. Try it
       from a machine on 192.168.1.x (or ubersdr-side) when convenient. Without
       a radio: `FAKE_DISCOVERY=1 tools/fake_flex.py --port 4993 --forever` sends
-      the discovery packet to 127.0.0.1 every second (a Python listener parsed
-      it as `FLEX-6600 FakeFlex VU2CPL 127.0.0.1:4993, 2 of 2`, 2026-10-11); the
-      click in the app is still to do - the screen was locked. (Asked about
+      the discovery packet to 127.0.0.1 every second. **Tested in the app
+      2026-10-11** (local bundle, throwaway `-r disctest`): Discover listed
+      `FLEX-6600 "FakeFlex" VU2CPL - 127.0.0.1:4993, 2 of 2 clients free`,
+      filled the box, and Test CAT then went green with the fake radio logging
+      the full start-up (sub, client udpport, slice create, dax streams). So
+      only the real radio's broadcast on its own subnet is left. (Gotcha: a test
+      ini without `PTTMethod` gives "Invalid PTT method" on Test CAT - VOX is
+      greyed out for this rig; pick CAT.) (Asked about
       rimuadmin/ProtoFlex, a closed-source Windows-only Flex emulator for
       TeensyMaestro with discovery but no DAX audio: not used.)
 - [ ] **Red ERR box click against the real radio** (v0.7.4): tested only
