@@ -5523,12 +5523,18 @@ void MainWindow::processMessage(QString const& messages, int position, bool alt,
     return;
   }
 
-  bool const from_call = Radio::is_callsign (hiscall) // not interested if not from QSO partner
-      || (t4.size () == 7          // unless it is of the form
-           && (t4.at (5) == m_baseCall // "<our-call> 73"
-               || t4.at (5).startsWith (m_baseCall + '/')
-               || t4.at (5).endsWith ('/' + m_baseCall))
-           && t4.at (6) == "73");
+  // JTDX-VU: a sign-off to us that names no sender ("<our-call> 73", "... RRR",
+  // "... RR73") can't be told from a late one from an earlier QSO: leave the DX
+  // call, the period and Tx alone (it used to clear the DX call and arm Tx with
+  // an empty Tx5)
+  if (hiscall.isEmpty () && t4.size () > 6
+      && (t4.at (5) == m_baseCall
+          || t4.at (5).startsWith (m_baseCall + '/')
+          || t4.at (5).endsWith ('/' + m_baseCall))
+      && (t4.at (6) == "73" || t4.at (6) == "RRR" || t4.at (6).startsWith ("RR73")))
+    return;
+
+  bool const from_call = Radio::is_callsign (hiscall); // not interested if not from QSO partner
 
   // JTDX-VU: only a decode (first field the UTC time, not a separator's dashes)
   // moves the Tx period, and under AutoSeq only one we go on to answer: with
