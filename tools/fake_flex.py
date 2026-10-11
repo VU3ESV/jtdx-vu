@@ -17,6 +17,11 @@ FAKE_NO_ECHO=1 answers "slice tune" / "slice set" OK but never reports the
 change in the slice status (seen on the FLEX-6600, 2026-10-07).
 FAKE_TUNE_DELAY=0.8 delays the status echo of "slice tune", as a real radio
 does on a band change (the 2026-10-07 hang needed it).
+FAKE_DISCOVERY=1 also sends the radio's discovery packet (VITA-49 header + key=value
+text, as the 6600 broadcasts on UDP 4992) once a second, so Settings > Radio > Discover
+can be tested without a radio. It goes to 127.0.0.1 unless FAKE_DISCOVERY_TO names
+another address (255.255.255.255 = the whole LAN - other Flex clients there would see
+"FakeFlex" too); FAKE_DISCOVERY_IP is the address it advertises (default 127.0.0.1).
 usage: fake_flex.py --sig DIR --snr -10,-14 [--repeats 2] [--port 4992] [--log fake_flex.txt]
                     [--wait 25] [--noise 0.05] [--txdir DIR] [--freq 14074000]
 """
@@ -180,6 +185,27 @@ def tx_listener(a):
         for i in range(0, len(samples) - 1, 2): cur.append(int((samples[i] + samples[i + 1]) / 2))   # 24 -> 12 kHz
         n += 1; last = time.time()
 
+def discovery(a):
+    to = os.environ.get("FAKE_DISCOVERY_TO", "127.0.0.1")
+    ip = os.environ.get("FAKE_DISCOVERY_IP", "127.0.0.1")
+    text = ("discovery_protocol_version=3.1.0.2 model=FLEX-6600 serial=0000-0000-0000-0000 version=4.1.5.39794 "
+            f"nickname=FakeFlex callsign=VU2CPL ip={ip} port={a.port} status=Available inuse_ip= inuse_host= "
+            "max_licensed_version=v4 radio_license_id=00-00-00-00-00-00 requires_additional_license=0 "
+            "fpc_mac= wan_connected=0 licensed_clients=2 available_clients=2 max_panadapters=4 "
+            "available_panadapters=4 max_slices=4 available_slices=4").encode()
+    text += bytes(-len(text) % 4)
+    words = 7 + len(text) // 4
+    udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
+    count = 0
+    while True:
+        hdr = struct.pack(">IIIIIII", 0x38520000 | ((count & 0x0f) << 16) | words, 0x00000800, OUI, 0x534CFFFF,
+                          int(time.time()), 0, 0)
+        try: udp.sendto(hdr + text, (to, 4992))
+        except OSError as e: logw(f"discovery send failed: {e}")
+        count += 1
+        time.sleep(1)
+
 def main():
     global log
     ap = argparse.ArgumentParser()
@@ -219,6 +245,7 @@ def main():
             c, _ = srv.accept(); threading.Thread(target=serve, args=(c, a), daemon=True).start()
     threading.Thread(target=acceptor, daemon=True).start()
     threading.Thread(target=tx_listener, args=(a,), daemon=True).start()
+    if os.environ.get("FAKE_DISCOVERY"): threading.Thread(target=discovery, args=(a,), daemon=True).start()
 
     udp = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     dt = FPP / RATE

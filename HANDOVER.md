@@ -3232,7 +3232,13 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **Discover on the radio's own subnet** (v0.7.4): only proven by the
       parse loop in a scratch program against the 6600's captured broadcast;
       the Mac mini and the MacBook-over-VPN are both on other subnets. Try it
-      from a machine on 192.168.1.x (or ubersdr-side) when convenient.
+      from a machine on 192.168.1.x (or ubersdr-side) when convenient. Without
+      a radio: `FAKE_DISCOVERY=1 tools/fake_flex.py --port 4993 --forever` sends
+      the discovery packet to 127.0.0.1 every second (a Python listener parsed
+      it as `FLEX-6600 FakeFlex VU2CPL 127.0.0.1:4993, 2 of 2`, 2026-10-11); the
+      click in the app is still to do - the screen was locked. (Asked about
+      rimuadmin/ProtoFlex, a closed-source Windows-only Flex emulator for
+      TeensyMaestro with discovery but no DAX audio: not used.)
 - [ ] **Red ERR box click against the real radio** (v0.7.4): tested only
       against `tools/fake_flex.py`.
 - [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07: connect,
