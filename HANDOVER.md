@@ -3556,6 +3556,12 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **Intel start-up crash fix: RELEASE it** - verified 20/20 under Rosetta
       (2026-10-13); Intel users crash every other start on 0.7.3 / 0.7.4
       until then. Manoj calls the release.
+- [ ] **ON HOLD (Manoj, 2026-10-14): a priority list and a blacklist like MSHV.**
+      Not started beyond a first look. Starting points: the right-click queue
+      (`QsoHistory::setQueue`, score 100000+) is the nearest thing to a manual
+      priority; it works in every AutoSeq mode (not JTTY, no effect in WSPR) but has
+      only been tested in FT8. Compare with MSHV's lists before designing; keep the
+      stock JTDX settings as they are.
 - [ ] **rc4 testers:** VU2OY for #1 (AetherSDR) and #4 (Flex over WireGuard),
       iw1gb for #2 (Bypass) - reply on #1 / #4 with the rc4 link once CI is done;
       close #1, #2, #4, #5 when the release is out.
