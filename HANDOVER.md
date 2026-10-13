@@ -311,11 +311,13 @@ after 0.7.5; use `0.7.5~rc1` if an rc .deb is ever shipped). The earlier
   launched **20 of 20** times under Rosetta with a throwaway profile,
   alternating UseDarkStyle true/false, no crash reports - against 1 crash in
   6 for the release 0.7.4 x86_64 app the same way. Needs a release for Intel
-  users. Trial zips for the reporters (2026-10-13, both still labelled 0.7.4):
-  `~/Desktop/jdxvu/test/JTDX-VU-trial-macos-intel.zip` (that CI build) and
-  `JTDX-VU-trial-windows-x64.zip` (Windows CI run 38352561244 on `3350d561`:
-  the same fix plus the third-copy Flex join, the aligned country column and
-  the provinces - for KK4CDK), sha256 in `trial-sha256.txt` beside them.
+  users. Builds for the reporters: **0.7.5-rc1** (`2fd4c7b6`), macOS CI run
+  38354885914 and Windows run 38354889408, in `~/Desktop/jdxvu/test/` as
+  `JTDX-VU-0.7.5-rc1-macos-x86_64.zip` (for the Intel reporter) and
+  `JTDX-VU-0.7.5-rc1-windows-x64.zip` (for KK4CDK: the third-copy Flex join,
+  the aligned country column, the provinces and this fix), `.sha256` beside
+  each, both checked. The earlier "trial" zips (0.7.4-labelled) are in the
+  Trash, as is the loose Intel trial app Manoj had opened from one of them.
 - TCI audit from the MSHV posts Manoj forwarded (RX2 instance keying the wrong
   slice; crashes): JTDX-VU's `TCITransceiver::do_ptt` keys `trx:<rx_>,true`
   with rx_ 1 for the "TCI Client RX2" rig, so the receiver is right on our
