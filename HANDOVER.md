@@ -391,7 +391,7 @@ Aurora 520 4, 6700 / 8800 8, M suffix irrelevant).
   (two GUI + one joined), watching flex_trace.txt for "joined GUI client";
   unknowns there: whether a bound client may `slice create`, `xmit`, and get
   DAX streams, and whether `client gui <uuid>` is accepted (else the plain
-  retry). Scratch `multitest.sh` in the scratchpad runs the three-copy test.
+  retry). `tools/flex_multicopy_test.sh` runs the three-copy test on the fake.
 
 ### 2026-10-13 — KK4CDK's third report: blank lines, a third VITA-49 instance, typing a frequency
 
@@ -433,7 +433,8 @@ Three items in one mail (v0.7.4 on Windows, FLEX-6700).
   `slice tune 0 28.088000 autopan=1`. README now says so. If it fails for him
   on Windows, ask what the box does (red OOB = outside every band).
 - Test leftovers: none (both copies cleaned up). Scratch scripts
-  `aligntest3.sh`, `freqtest_start/stop.sh` live only in the scratchpad.
+  the decode-window one is now
+  `tools/decode_window_test.sh` (WAVS=..., EXTRA_INI, LOGADI); the freqtest ones were scratch.
 
 ### 2026-10-11 — Show US State also shows Canadian provinces (for the next release)
 
