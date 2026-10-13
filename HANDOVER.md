@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-11
+Last updated: 2026-10-13
 
 ## Current state
 
@@ -3256,7 +3256,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [x] **FT2 credit** (2026-10-08): wording fixed everywhere incl. the v0.7.0
   release notes; reuse it in future release notes. Martino IU8LMC replied
   with thanks (2026-10-08) - no further names asked for.
-- [ ] **Discover on the radio's own subnet** (v0.7.4): only proven by the
+- [x] **Discover on the radio's own subnet** — CONFIRMED by Manoj 2026-10-13 at
+      VU2OY's shack (radio on the same LAN): Discover found the radio and it
+      worked. Was (v0.7.4): only proven by the
       parse loop in a scratch program against the 6600's captured broadcast;
       the Mac mini and the MacBook-over-VPN are both on other subnets. Try it
       from a machine on 192.168.1.x (or ubersdr-side) when convenient. Without
