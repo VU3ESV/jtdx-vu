@@ -13,6 +13,9 @@ DAX TX packets (type 1, class 0x534C0123, 128 mono int16 BE) arriving on UDP
 check what JTDX-VU sent.
 
 FAKE_GUI_SLICE=1 hands a new GUI client a slice at 14.100 USB, as the 6600 does.
+Several clients may connect at once, each with its own handle; "client gui" is
+refused (F3000001) past FAKE_GUI_LIMIT (default 2, the multiFLEX limit of every
+FLEX-6000) and a non-GUI client may "client bind" to a GUI client's station.
 FAKE_NO_ECHO=1 answers "slice tune" / "slice set" OK but never reports the
 change in the slice status (seen on the FLEX-6600, 2026-10-07).
 FAKE_TUNE_DELAY=0.8 delays the status echo of "slice tune", as a real radio
@@ -36,7 +39,7 @@ OUI = 0x00001C2D
 RX_CLASS, TX_CLASS = 0x534C03E3, 0x534C0123
 log = None
 lock = threading.Lock()
-state = {"udpport": 0, "slices": {}, "rx_stream": 0, "tx_stream": 0, "next_slice": 0, "xmit": 0, "peer": None,
+state = {"clients": {}, "next_handle": HANDLE, "slices": {}, "next_slice": 0, "xmit": 0,
          "tx": {"rfpower": 50, "tunepower": 10, "max_power_level": 100, "hwalc_enabled": 0},
          "atu": {"status": "TUNE_BYPASS", "atu_enabled": 1, "memories_enabled": 0, "using_mem": 0}}
 # meters: id -> (src, num, name, unit) - what the panel and the S-meter read
@@ -49,20 +52,49 @@ def atu_line(): return "atu " + " ".join("%s=%s" % kv for kv in state["atu"].ite
 def logw(s):
     log.write("%.3f %s\n" % (time.time(), s)); log.flush()
 
-def status(sock, text):
-    sock.sendall(("S%08X|%s\n" % (HANDLE, text)).encode())
+SOCK_H = {}                                               # socket -> that client's handle
+GUI_LIMIT = int(os.environ.get("FAKE_GUI_LIMIT", "2"))     # multiFLEX: GUI clients per radio, every model
+
+def status(sock, text, h=None):
+    sock.sendall(("S%08X|%s\n" % (h if h is not None else SOCK_H.get(sock, 0), text)).encode())
+
+def broadcast(text, h=0):
+    for cl in list(state["clients"].values()):
+        try: status(cl["sock"], text, h)
+        except OSError: pass
+
+def client_line(h):
+    cl = state["clients"][h]
+    return ("client 0x%08X connected client_id=%s program=%s station=%s local_ptt=1"
+            % (h, cl["client_id"], cl["program"] or "none", cl["station"] or "none"))
 
 def slice_line(n):
     s = state["slices"][n]
+    owner = s["owner"]
+    mine = sorted(k for k, v in state["slices"].items() if v["owner"] == owner)
+    letter = chr(ord('A') + mine.index(n))                # index_letter is numbered per station
     return ("slice %d in_use=1 sample_rate=24000 RF_frequency=%.6f client_handle=0x%08X index_letter=%s rxant=%s "
             "mode=%s wide=0 txant=%s dax=%d tx=%d active=1 ant_list=ANT1,ANT2,RX_A,XVTA mode_list=LSB,USB,DIGU,DIGL,CW "
             "tx_ant_list=ANT1,ANT2,XVTA"
-            % (n, s["freq"] / 1e6, HANDLE, chr(ord('A') + n), s.get("rxant", "ANT1"), s["mode"], s.get("txant", "ANT1"), s["dax"], s["tx"]))
+            % (n, s["freq"] / 1e6, owner, letter, s.get("rxant", "ANT1"), s["mode"], s.get("txant", "ANT1"), s["dax"], s["tx"]))
 
+def new_slice(owner, f, mode):
+    n = state["next_slice"]; state["next_slice"] += 1
+    state["slices"][n] = {"freq": f, "mode": mode, "dax": 0, "tx": 1, "owner": owner}
+    return n
+
+# One connection = one client with its own handle. "client gui" is refused with
+# F3000001 past GUI_LIMIT (what KK4CDK's 6700 answered a third JTDX-VU); a
+# non-GUI client can "client bind client_id=" to a GUI client and then shares
+# its station: slices it creates carry that client's handle.
 def serve(c, a):
-    state["peer"] = c.getpeername()[0]
-    c.sendall(b"V1.4.0.0\n" + ("H%08X\n" % HANDLE).encode())
-    logw("client connected")
+    with lock:
+        h = state["next_handle"]; state["next_handle"] += 1
+        cl = state["clients"][h] = {"sock": c, "gui": False, "client_id": None, "bound": 0, "program": "", "station": "",
+                                    "udpport": 0, "peer": c.getpeername()[0], "rx_stream": 0, "tx_stream": 0}
+        SOCK_H[c] = h
+    c.sendall(b"V1.4.0.0\n" + ("H%08X\n" % h).encode())
+    logw("client 0x%08X connected" % h)
     buf = b""
     try:
         while True:
@@ -74,15 +106,37 @@ def serve(c, a):
                 line = line.decode(errors="replace").strip()
                 if not line.startswith("C"): continue
                 seq, _, cmd = line[1:].partition("|")
-                body, extra = "", []
+                body, extra, code = "", [], "0"
                 p = cmd.split()
                 with lock:
-                    if p[0] == "client" and p[1] == "gui" and os.environ.get("FAKE_GUI_SLICE"):
-                        # like the 6600: a new GUI client is handed a slice at the radio's default
-                        n = state["next_slice"]; state["next_slice"] += 1
-                        state["slices"][n] = {"freq": 14100000, "mode": "USB", "dax": 0, "tx": 1}
-                        extra.append(slice_line(n))
-                    elif p[0] == "client" and p[1] == "udpport": state["udpport"] = int(p[2])
+                    owner = cl["bound"] or h                       # whose station our slices belong to
+                    if p[0] == "client" and p[1] == "gui":
+                        if sum(1 for x in state["clients"].values() if x["gui"]) >= GUI_LIMIT:
+                            code = "F3000001"
+                        else:
+                            cl["gui"] = True; cl["client_id"] = p[2] if len(p) > 2 else "%08x-0000-fake" % h
+                            extra.append(client_line(h))
+                            if os.environ.get("FAKE_GUI_SLICE"):
+                                # like the 6600: a new GUI client is handed a slice at the radio's default
+                                extra.append(slice_line(new_slice(h, 14100000, "USB")))
+                    elif p[0] == "client" and p[1] == "program":
+                        cl["program"] = p[2] if len(p) > 2 else ""
+                        if cl["gui"]: extra.append(client_line(h))
+                    elif p[0] == "client" and p[1] == "station":
+                        cl["station"] = p[2] if len(p) > 2 else ""
+                        if cl["gui"]: extra.append(client_line(h))
+                    elif p[0] == "client" and p[1] == "bind":
+                        want = cmd.partition("client_id=")[2].strip()
+                        gui = [k for k, x in state["clients"].items() if x["gui"] and x["client_id"] == want]
+                        if gui and not cl["gui"]:
+                            cl["bound"] = gui[0]
+                            for n, s in state["slices"].items():
+                                if s["owner"] == gui[0]: extra.append(slice_line(n))
+                        else: code = "50000015"
+                    elif p[0] == "client" and p[1] == "udpport": cl["udpport"] = int(p[2])
+                    elif p[0] == "sub" and p[1] == "client":
+                        for k, x in state["clients"].items():
+                            if x["gui"]: extra.append(client_line(k))
                     elif p[0] == "sub" and p[1] == "slice":
                         for n in state["slices"]: extra.append(slice_line(n))
                     elif p[0] == "sub" and p[1] == "tx": extra.append(tx_line())
@@ -110,11 +164,10 @@ def serve(c, a):
                         logw("< %s" % cmd); c.sendall(("R%s|500000B7|\n" % seq).encode()); continue   # a 6600 has no front speaker
                     elif p[0] == "info": body = 'model="FLEX-6600",chassis_serial="FAKE",software_ver=3.8.19,atu_present=1'
                     elif p[0] == "slice" and p[1] == "create":
-                        n = state["next_slice"]; state["next_slice"] += 1
                         f = a.freq
                         for kv in p[2:]:
                             if kv.startswith("freq="): f = int(round(float(kv[5:]) * 1e6))
-                        state["slices"][n] = {"freq": f, "mode": "DIGU", "dax": 0, "tx": 1}
+                        n = new_slice(owner, f, "DIGU")
                         body = str(n); extra.append(slice_line(n))
                     elif p[0] == "slice" and p[1] == "tune":
                         n = int(p[2]); f_new = int(round(float(p[3]) * 1e6))
@@ -127,42 +180,57 @@ def serve(c, a):
                         if os.environ.get("FAKE_NO_ECHO"): pass              # accept, never report it (what the 6600 seemed to do)
                         elif d > 0:
                             line_ = slice_line(n)
-                            threading.Timer(d, lambda c=c, l=line_: status(c, l)).start()
+                            threading.Timer(d, lambda l=line_: broadcast(l)).start()
                         else: extra.append(slice_line(n))
                     elif p[0] == "slice" and p[1] in ("set", "s"):
                         n = int(p[2])
                         for kv in p[3:]:
                             k, _, v = kv.partition("=")
                             if k == "mode": state["slices"][n]["mode"] = v.upper()
-                            elif k == "tx": state["slices"][n]["tx"] = int(v)
+                            elif k == "tx":
+                                state["slices"][n]["tx"] = int(v)
+                                if int(v):                                   # one transmitter: the others lose tx
+                                    for m_, s_ in state["slices"].items():
+                                        if m_ != n and s_["tx"]: s_["tx"] = 0; extra.append(slice_line(m_))
                             elif k in ("rxant", "txant"): state["slices"][n][k] = v
                         if not os.environ.get("FAKE_NO_ECHO"): extra.append(slice_line(n))
                     elif p[0] == "slice" and p[1] == "remove":
                         n = int(p[2]); state["slices"].pop(n, None); extra.append("slice %d in_use=0" % n)
                     elif p[0] == "dax" and p[1] == "audio" and p[2] == "set":
-                        for n in state["slices"]: state["slices"][n]["dax"] = int(p[3])
+                        which = [int(kv[6:]) for kv in p[4:] if kv.startswith("slice=")]
+                        for n in (which or list(state["slices"])):
+                            if n in state["slices"]: state["slices"][n]["dax"] = int(p[3])
                     elif p[0] == "stream" and p[1] == "create":
                         if "type=dax_rx" in cmd:
-                            state["rx_stream"] = 0x04000001; body = "0x%08X" % state["rx_stream"]
+                            cl["rx_stream"] = 0x04000000 | (h & 0xFFFF); body = "0x%08X" % cl["rx_stream"]
                             extra.append("stream 0x%08X type=dax_rx dax_channel=1 client_handle=0x%08X ip=%s port=%d"
-                                         % (state["rx_stream"], HANDLE, state["peer"], state["udpport"]))
+                                         % (cl["rx_stream"], h, cl["peer"], cl["udpport"]))
                         else:
-                            state["tx_stream"] = 0x84000000; body = "0x%08X" % state["tx_stream"]
-                            extra.append("stream 0x%08X type=dax_tx client_handle=0x%08X" % (state["tx_stream"], HANDLE))
+                            cl["tx_stream"] = 0x84000000 | (h & 0xFFFF); body = "0x%08X" % cl["tx_stream"]
+                            extra.append("stream 0x%08X type=dax_tx client_handle=0x%08X" % (cl["tx_stream"], h))
                     elif p[0] == "stream" and p[1] == "remove":
                         sid = int(p[2], 16)
-                        if sid == state["rx_stream"]: state["rx_stream"] = 0
-                        if sid == state["tx_stream"]: state["tx_stream"] = 0
+                        if sid == cl["rx_stream"]: cl["rx_stream"] = 0
+                        if sid == cl["tx_stream"]: cl["tx_stream"] = 0
                     elif p[0] == "xmit":
                         state["xmit"] = int(p[1]); extra.append("interlock state=%s" % ("TRANSMITTING" if state["xmit"] else "READY"))
-                logw("< %s" % cmd)
-                c.sendall(("R%s|0|%s\n" % (seq, body)).encode())
-                for e in extra: status(c, e)
+                logw("< %s  [0x%08X]" % (cmd, h))
+                c.sendall(("R%s|%s|%s\n" % (seq, code, body)).encode())
+                for e in extra:
+                    if e.startswith(("slice ", "client ", "interlock ")): broadcast(e, h)
+                    else: status(c, e, h)
     except OSError:
         pass
     with lock:
-        state["rx_stream"] = state["tx_stream"] = 0; state["udpport"] = 0; state["xmit"] = 0
-    logw("client closed")
+        state["clients"].pop(h, None); SOCK_H.pop(c, None)
+        gone = [n for n, s in state["slices"].items() if s["owner"] == h]   # a station closes with its GUI client
+        for n in gone: state["slices"].pop(n)
+        for x in state["clients"].values():
+            if x["bound"] == h: x["bound"] = 0
+        if not state["clients"]: state["xmit"] = 0
+    for n in gone: broadcast("slice %d in_use=0" % n, h)
+    if cl["gui"]: broadcast("client 0x%08X disconnected" % h, h)
+    logw("client 0x%08X closed" % h)
 
 def tx_listener(a):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.bind(("0.0.0.0", 4991))
@@ -231,7 +299,7 @@ def main():
     NB = len(noise) - FPP - 1
     t = math.ceil((time.time() + a.wait) / 15) * 15
     plan = []
-    for g, snr in levels:
+    for g, snr in (levels if sigs48 else []):        # no --sig: noise only, nothing to schedule
         for r in range(a.repeats):
             log.write(f"{t:.3f} {time.strftime('%Y%m%d_%H%M%S', time.gmtime(t))} level {g:.6f} rep {r} snr {snr:.1f}\n")
             for k in range(6): plan.append((t + k * PERIOD, k + 1, g))
@@ -254,10 +322,10 @@ def main():
         bt = t0 + n * dt
         delay = bt - time.time()
         if delay > 0: time.sleep(delay)
-        with lock: sid, port, peer = state["rx_stream"], state["udpport"], state["peer"]
+        with lock: targets = [(x["rx_stream"], x["udpport"], x["peer"]) for x in state["clients"].values() if x["rx_stream"] and x["udpport"]]
         # FAKE_NO_AUDIO: control works, no VITA-49 ever arrives - a firewall or a
         # VPN dropping the radio's UDP (KK4CDK, VU2OY, 2026-10-10)
-        if sid and port and not os.environ.get("FAKE_NO_AUDIO"):
+        if targets and not os.environ.get("FAKE_NO_AUDIO"):
             off = rnd.randrange(0, NB)
             block = noise[off:off + FPP]
             for (ts, k, g) in plan:
@@ -272,9 +340,10 @@ def main():
             # stereo L == R, big-endian floats
             st = array.array("f", bytes(8 * FPP)); st[0::2] = block; st[1::2] = block
             if sys.byteorder == "little": st.byteswap()
-            hdr = struct.pack(">IIIIII", 0x38500107 | ((count & 0x0f) << 16), sid, OUI, RX_CLASS, int(bt), 0) + struct.pack(">I", 0)
-            udp.sendto(hdr + st.tobytes(), (peer, port))
-            count += 1; sent += 1
+            for sid, port, peer in targets:
+                hdr = struct.pack(">IIIIII", 0x38500107 | ((count & 0x0f) << 16), sid, OUI, RX_CLASS, int(bt), 0) + struct.pack(">I", 0)
+                udp.sendto(hdr + st.tobytes(), (peer, port))
+            count += 1; sent += len(targets)
             if n % 19 == 0:                                       # meters, about 10 a second
                 with lock: keyed = state["xmit"]; rf = state["tx"]["rfpower"]
                 watts = 100.0 * rf / 100.0 if keyed else 0.0
@@ -283,7 +352,7 @@ def main():
                 div = {"dBm": 128, "SWR": 128, "dBFS": 128, "degC": 64, "Volts": 256}
                 pl = b"".join(struct.pack(">hh", i, max(-32768, min(32767, int(round(v * div[METERS[i][3]]))))) for i, v in vals.items())
                 mh = struct.pack(">IIIII", 0x38500000 | ((7 + len(pl) // 4) & 0xffff), 0x00000700, OUI, 0x534C8002, 0) + struct.pack(">II", 0, 0)
-                udp.sendto(mh + pl, (peer, port))
+                for sid, port, peer in targets: udp.sendto(mh + pl, (peer, port))
         n += 1
     print(f"done: {sent} RX packets", flush=True)
 

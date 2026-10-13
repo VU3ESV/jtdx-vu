@@ -47,7 +47,8 @@ Last updated: 2026-10-13
   at connect, a clickable ERR box, the "FlexRadio:" box with Discover, Show
   US State, and the QO-100 13cm Club Log / JTTY lookups. Unreleased since
   v0.7.4: the country column lined up on bold lines; Canadian provinces in
-  Show US State (both 2026-10-11).
+  Show US State (both 2026-10-11); a third and fourth Flex copy join a GUI
+  client's station (2026-10-13).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -268,6 +269,48 @@ Last updated: 2026-10-13
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-13 — Flex: a third and fourth JTDX-VU join a GUI client's station (for the next release)
+
+Manoj: the 6700 has 8 slices, enable it (the limit KK4CDK hit is the radio's
+two GUI clients, not slices; models: 6400 / Aurora 510 2 slices, 6600 / 8600 /
+Aurora 520 4, 6700 / 8800 8, M suffix irrelevant).
+
+- **FlexTransceiver::start_session:** `sub client all` first; `client gui
+  <uuid>` (a fresh QUuid per connection, as SmartSDR sends one, so others can
+  bind to us); `client program JTDX-VU`. Refused with **0xF3000001** ->
+  `bind_to_gui_client ()`: pick a GUI client from the `client 0x<h> connected
+  client_id=<uuid> program=<p>` status lines (JTDX-VU preferred, else any, e.g.
+  SmartSDR; disconnected ones dropped), `client bind client_id=<uuid>`,
+  `bound_handle_` = that client. Any other refusal code: retry the plain
+  `client gui` (older firmware / id syntax), never a bind - so a lone JTDX-VU
+  cannot end up inside SmartSDR's station by accident.
+- **Slice ownership:** `owner_hex ()` (the bound GUI client's handle, else
+  ours) replaces `handle_hex ()` in `owned_slice*`. A joined copy takes over
+  only its own letter within that station, and not if that slice already feeds
+  a DAX channel (another JTDX-VU's) - it creates one instead; `slice create`'s
+  reply body (the index) names the new slice. The old "slice index = letter"
+  fallback now applies only to a slice with no `client_handle=` (pre-multiFLEX
+  firmware) or ours: on the fake radio without handed slices a second GUI
+  copy had taken the first copy's slice 0 through it.
+- DAX channel stays letter + 1, so copies on one station with different
+  letters use different channels; `do_ptt` already sets `slice set n tx=1`
+  before `xmit 1`, so whichever copy keys gets the transmitter.
+- **tools/fake_flex.py** rewritten per client: own handles, `FAKE_GUI_LIMIT`
+  (default 2) -> F3000001, `sub client all`, `client program/station/bind`,
+  slices with owner and per-station `index_letter`, per-client DAX streams and
+  audio, status broadcast to every client, one TX slice; a GUI client's slices
+  go when it disconnects. Also fixed: without `--sig` it scheduled periods it
+  had no signals for and died (KeyError) once a client took audio.
+- **Tested** (local bundle): three copies `-r flexa` (Slice A), `flexb`
+  (Slice A), `flexc` (Slice B) on the fake, with and without handed slices:
+  a and b GUI clients with their own slices, c refused, joined a's station,
+  created slice 2 = station letter B on DAX 2, all three stayed connected
+  45-60 s. **Not yet on a real radio:** Manoj to run three copies on the 6600
+  (two GUI + one joined), watching flex_trace.txt for "joined GUI client";
+  unknowns there: whether a bound client may `slice create`, `xmit`, and get
+  DAX streams, and whether `client gui <uuid>` is accepted (else the plain
+  retry). Scratch `multitest.sh` in the scratchpad runs the three-copy test.
 
 ### 2026-10-13 — KK4CDK's third report: blank lines, a third VITA-49 instance, typing a frequency
 
@@ -3317,8 +3360,10 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       TeensyMaestro with discovery but no DAX audio: not used.)
 - [ ] **KK4CDK blank lines in Band Activity (Windows):** waiting on his New
       only state and the pane's copied text (2026-10-13 entry).
-- [ ] **Third/fourth VITA-49 instance on one radio** (KK4CDK): needs the
-      non-GUI `client bind` fallback; Manoj to decide, test on the 6600.
+- [ ] **Third/fourth VITA-49 copy on one radio** (KK4CDK): BUILT 2026-10-13
+      (non-GUI `client bind` fallback, see entry); works on the fake radio;
+      **to test on the 6600 with three copies**, then a Windows trial for
+      Miguel's 6700 (four copies).
 - [ ] **Red ERR box click against the real radio** (v0.7.4): tested only
       against `tools/fake_flex.py`.
 - [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07: connect,

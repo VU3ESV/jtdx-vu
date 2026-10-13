@@ -1,4 +1,5 @@
 #include "FlexTransceiver.hpp"
+#include <QUuid>
 
 #include <QTcpSocket>
 #include <QUdpSocket>
@@ -225,6 +226,11 @@ QString FlexTransceiver::handle_hex () const
   return QString ("client_handle=0x%1").arg (handle_, 8, 16, QChar ('0')).toLower ();
 }
 
+QString FlexTransceiver::owner_hex () const
+{
+  return QString ("client_handle=0x%1").arg (bound_handle_ ? bound_handle_ : handle_, 8, 16, QChar ('0')).toLower ();
+}
+
 // The radio sends its VITA-49 (DAX audio, meters) to us unasked, which a
 // stateful firewall or NAT between us drops: seen over a WireGuard VPN into
 // VU2OY's network, where TCP control worked but no UDP arrived. A packet from
@@ -371,9 +377,17 @@ bool FlexTransceiver::slice_exists (int n) const
   return exists;
 }
 
+QString FlexTransceiver::slice_status (int n) const
+{
+  QString const want = QString ("|slice %1 ").arg (n);
+  QString found;
+  for (auto const& l : status_log_) if (l.contains (want)) found = l;
+  return found.toLower ();
+}
+
 int FlexTransceiver::owned_slice () const
 {
-  QString const want = handle_hex ();
+  QString const want = owner_hex ();
   int found = -1;
   QRegularExpression const rx {"\\|slice (\\d+)"};
   for (auto const& l : status_log_)
@@ -391,7 +405,7 @@ int FlexTransceiver::owned_slice () const
 int FlexTransceiver::owned_slice_by_letter (int letter) const
 {
   if (letter < 0) return -1;
-  QString const want = handle_hex ();
+  QString const want = owner_hex ();
   QRegularExpression const isletter {QString ("index_letter=%1(\\s|$)").arg (QChar ('a' + letter))};
   QRegularExpression const rx {"\\|slice (\\d+)"};
   int found = -1;
@@ -436,6 +450,56 @@ Transceiver::MODE FlexTransceiver::unmap_mode (QString const& s) const
   return UNK;
 }
 
+// JTDX-VU: the radio refused us as a GUI client - join an existing one. "sub
+// client all" lists them as S..|client 0x<handle> connected client_id=<uuid>
+// program=<p> station=<s>; a JTDX-VU is preferred, else any (SmartSDR, say).
+// After "client bind" the radio treats us as part of that station: its slices
+// carry the GUI client's handle, and a slice we create belongs to it too.
+bool FlexTransceiver::bind_to_gui_client ()
+{
+  QRegularExpression const con {"\\|client 0x([0-9A-Fa-f]+) connected (.*)$"};
+  QRegularExpression const dis {"\\|client 0x([0-9A-Fa-f]+) disconnected"};
+  QRegularExpression const idrx {"\\bclient_id=([0-9A-Fa-f-]+)"};
+  QRegularExpression const prx {"\\bprogram=(\\S+)"};
+  quint32 handle = 0;
+  QString id, program;
+  QElapsedTimer t;
+  t.start ();
+  while (connected_ && t.elapsed () < 2500)
+    {
+      QMap<quint32, QString> clients;              // handle -> the rest of its last line
+      for (auto const& l : status_log_)
+        {
+          auto const m = con.match (l);
+          if (m.hasMatch ()) {clients[m.captured (1).toUInt (nullptr, 16)] = m.captured (2); continue;}
+          auto const d = dis.match (l);
+          if (d.hasMatch ()) clients.remove (d.captured (1).toUInt (nullptr, 16));
+        }
+      handle = 0;
+      for (auto it = clients.cbegin (); it != clients.cend (); ++it)
+        {
+          auto const im = idrx.match (it.value ());
+          if (!im.hasMatch () || it.key () == handle_) continue;
+          auto const pm = prx.match (it.value ());
+          QString const p = pm.hasMatch () ? pm.captured (1) : QString {};
+          if (!handle || (p == "JTDX-VU" && program != "JTDX-VU")) {handle = it.key (); id = im.captured (1); program = p;}
+        }
+      if (handle) break;
+      wait_ms (200);
+    }
+  if (!handle) {trace ("no GUI client with a client_id heard"); return false;}
+  int const seq = send ("client bind client_id=" + id);
+  if (!wait_reply (seq, 3000) || replies_.value (seq).first != 0)
+    {
+      error_ = tr ("Flex: the radio allows two GUI clients and both are taken; joining %1 (0x%2) was refused (0x%3)")
+        .arg (program.isEmpty () ? QString {"the GUI client"} : program).arg (handle, 0, 16).arg (replies_.value (seq).first, 0, 16);
+      return false;
+    }
+  bound_handle_ = handle;
+  trace (QString ("joined GUI client 0x%1 (%2, client_id %3) as a non-GUI client").arg (handle, 0, 16).arg (program, id));
+  return true;
+}
+
 // The start-up, measured against a FLEX-6600 (MSHV-Mac): the radio volunteers
 // V and H on connect; "client gui" is what makes it show and grant slices;
 // "client udpport" must name a socket already bound; "dax audio set" routes a
@@ -450,9 +514,38 @@ bool FlexTransceiver::start_session ()
   while (!handle_ && connected_ && t.elapsed () < 3000) wait_ms (50);
   if (!handle_) {error_ = tr ("Flex: the radio sent no client handle"); return false;}
 
-  int seq = send ("client gui");
+  send ("sub client all");                      // the other clients, with the client_id a non-GUI client binds to
+  bound_handle_ = 0;
+  client_id_ = QUuid::createUuid ().toString (QUuid::WithoutBraces);
+  int seq = send ("client gui " + client_id_);
   if (!wait_reply (seq, 3000)) {error_ = tr ("Flex: no reply to client gui"); return false;}
-  if (replies_[seq].first != 0) {error_ = tr ("Flex: client gui refused (0x%1)").arg (replies_[seq].first, 0, 16); return false;}
+  if (replies_[seq].first != 0)
+    {
+      // Every Flex admits two GUI clients (multiFLEX), whatever its slice count
+      // (6400 / Aurora 510: 2; 6600 / 8600 / Aurora 520: 4; 6700 / 8800: 8; an
+      // M suffix changes nothing). A third JTDX-VU joins one of them as a
+      // non-GUI client, as SmartSDR's DAX program does, and takes one of the
+      // station's other slices. If no GUI client is there to join, the refusal
+      // was not the limit: try the plain command older firmware expects.
+      quint32 const code = replies_[seq].first;
+      if (code == 0xF3000001)                     // the limit, as KK4CDK's 6700 answered a third JTDX-VU
+        {
+          trace ("client gui refused 0xf3000001 (two GUI clients already) - looking for one to join");
+          if (!bind_to_gui_client ())
+            {
+              if (error_.isEmpty ()) error_ = tr ("Flex: the radio allows two GUI clients and both are taken, and no GUI client was found to join");
+              return false;
+            }
+        }
+      else
+        {
+          trace (QString ("client gui <id> refused 0x%1 - trying the plain command").arg (code, 0, 16));
+          seq = send ("client gui");
+          if (!wait_reply (seq, 3000) || replies_[seq].first != 0) {error_ = tr ("Flex: client gui refused (0x%1)").arg (code, 0, 16); return false;}
+          client_id_.clear ();
+        }
+    }
+  send ("client program JTDX-VU");
   send ("sub slice all");
   send ("sub tx all");
   send ("sub radio all");
@@ -473,8 +566,26 @@ bool FlexTransceiver::start_session ()
 
   // one slice carries both halves: tune, key, read and listen on the same one
   int pick = owned_slice_by_letter (slice_letter_);
-  if (pick < 0) pick = owned_slice ();
-  if (pick < 0 && slice_exists (slice_letter_)) pick = slice_letter_;
+  if (pick >= 0 && bound_handle_)
+    {
+      // joined a station: a slice of it that already feeds a DAX channel is
+      // another JTDX-VU's - make our own instead of taking it over
+      QRegularExpression const dax {"\\bdax=[1-8]\\b"};
+      if (dax.match (slice_status (pick)).hasMatch ())
+        {
+          trace (QString ("slice %1 (letter %2) already has DAX - creating another").arg (pick).arg (QChar ('A' + slice_letter_)));
+          pick = -1;
+        }
+    }
+  if (pick < 0 && !bound_handle_) pick = owned_slice ();
+  if (pick < 0 && !bound_handle_ && slice_exists (slice_letter_))
+    {
+      // firmware before multiFLEX names no client_handle: then the letter is the
+      // index. With one, a slice we do not own is another client's (a second
+      // JTDX-VU, 2026-10-13 on the fake radio) and is left alone
+      auto const st = slice_status (slice_letter_);
+      if (!st.contains ("client_handle=") || st.contains (owner_hex ())) pick = slice_letter_;
+    }
   if (pick >= 0)
     {
       slice_ = pick;
@@ -484,11 +595,16 @@ bool FlexTransceiver::start_session ()
     {
       QString create = "slice create mode=digu";
       if (last_set_frequency_ > 0) create += QString (" freq=%1").arg (double (last_set_frequency_) / 1e6, 0, 'f', 6);
-      send (create);
+      int const before = owned_slice ();          // a station we joined may already have slices
+      seq = send (create);
+      wait_reply (seq, 4000);
+      bool ok = false;
+      int const made = replies_.value (seq).second.trimmed ().toInt (&ok);   // the radio answers with the slice index
       t.restart ();
-      while (owned_slice () < 0 && connected_ && t.elapsed () < 4000) wait_ms (100);
-      slice_ = owned_slice ();
-      if (slice_ < 0) {error_ = tr ("Flex: slice create not answered"); return false;}
+      if (ok) while (!slice_exists (made) && connected_ && t.elapsed () < 4000) wait_ms (100);
+      else while (owned_slice () == before && connected_ && t.elapsed () < 4000) wait_ms (100);
+      slice_ = ok ? made : owned_slice ();
+      if (slice_ < 0 || slice_ == before) {error_ = tr ("Flex: slice create not answered"); return false;}
       slice_created_ = true;
     }
   // the slice's full status came with "client gui", before we knew which slice
@@ -570,6 +686,8 @@ int FlexTransceiver::do_start (JTDXDateTime * jtdxtime)
   error_.clear ();
   ready_ = false;
   handle_ = 0;
+  bound_handle_ = 0;
+  client_id_.clear ();
   replies_.clear ();
   status_log_.clear ();
   rx_buf_.clear ();

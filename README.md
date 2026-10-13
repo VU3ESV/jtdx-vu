@@ -300,7 +300,18 @@ or Pi 5 is recommended.
   does; antennas are remembered per band for transverter users. Each
   connection puts the slice back on your last frequency in your data mode. To go to a
   frequency that is not in your list (a DXpedition on 28.088, say) type it over the band
-  name in the main window's band box and press Enter; the radio follows. Connecting and
+  name in the main window's band box and press Enter; the radio follows.
+  **Several copies on one radio** (since the next release): run one JTDX-VU
+  profile per slice, each set to its own slice letter (*Slice A*, *Slice B*...).
+  A Flex lets only two programs be GUI clients at a time (multiFLEX; the
+  6700 answers a third with `client gui refused (0xf3000001)`), so the third
+  and fourth copies join the first copy's station as non-GUI clients, the way
+  SmartSDR's DAX program does, and take one of the radio's remaining slices:
+  FLEX-6400 and Aurora 510 have 2 slices, 6600, 8600 and Aurora 520 have 4,
+  6700 and 8800 have 8 (an M suffix changes nothing). Start the copies one
+  after another, give every copy a different slice letter, and close them
+  with Quit so each removes the slice it made. Asked for by KK4CDK; worked on a
+  simulated radio, not yet on a real one. Connecting and
   receiving work on a FLEX-6600; transmit is so far verified only against a
   software stand-in (`tools/flex_selftest.sh`). Each connection appends a
   trace to `flex_trace.txt` in the profile's data folder. If you copy a

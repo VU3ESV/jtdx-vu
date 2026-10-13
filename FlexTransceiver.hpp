@@ -91,6 +91,7 @@ private:
   int owned_slice_by_letter (int letter) const;
   int owned_slice () const;
   bool slice_exists (int n) const;
+  QString slice_status (int n) const;            // the last status line of slice n, lower case ('' if none)
   QString handle_hex () const;
   void udp_register ();
   bool start_session ();                         // the whole start-up, or error_
@@ -145,6 +146,10 @@ private:
   QStringList status_log_;
   QString last_slice_line_;
   quint32 handle_;
+  quint32 bound_handle_ {0};         // JTDX-VU: we joined this GUI client's station as a non-GUI client (0 = we are a GUI client)
+  QString client_id_;                // our client id, sent with "client gui" as SmartSDR does, so others can bind to us
+  QString owner_hex () const;        // "client_handle=0x..." of whoever owns our slice: the GUI client we joined, else us
+  bool bind_to_gui_client ();        // the radio's two-GUI-client limit: join an existing GUI client's station
   bool connected_;
   bool ready_;
   QString model_;
