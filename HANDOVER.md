@@ -13,7 +13,7 @@ Last updated: 2026-10-13
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.4** (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.5-rc1** (last release 0.7.4) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -269,6 +269,21 @@ Last updated: 2026-10-13
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-13 — Test builds are release candidates: 0.7.5-rc1 (version scheme)
+
+Manoj: "why not name the test builds as rc XX?" Done: `Versions.cmake`
+`JTDXVU_VERSION 0.7.5-rc1` - the title bar, About, Info.plist, PSK Reporter and
+the CI zip names (`JTDX-VU-0.7.5-rc1-macos-x86_64.zip` ...) all follow. The
+release is cut by setting the plain `0.7.5`. `UpdateCheck::is_newer` now parses
+an `rcN` suffix (`parse_version`): numeric parts first, then the release beats
+every candidate of its number and rc2 beats rc1 - before, "0.7.5-rc1" parsed as
+(0,7,5,1) and would have sorted above the release, so rc testers would never
+have been offered it. Ten cases checked in a scratch program linked against
+updatecheck.cpp. Automatic checks stay on for rc builds (only "dev" turns them
+off). The .deb name would be `jtdx-vu-0.7.5-rc1-...` (Debian would sort that
+after 0.7.5; use `0.7.5~rc1` if an rc .deb is ever shipped). The earlier
+"trial" zips on the Desktop are replaced by the rc1 CI zips.
 
 ### 2026-10-13 — Start-up crash on Intel Macs: uninitialised dark-style flag (for the next release)
 

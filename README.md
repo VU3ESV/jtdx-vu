@@ -157,7 +157,9 @@ or Pi 5 is recommended.
   last check that got an answer. If it is newer than yours, a window shows
   its release notes with **Download** (opens the release page in your
   browser), **Skip This Version** and **Remind Me Later**; otherwise it
-  says nothing. When GitHub can't be reached it also says nothing, and
+  says nothing. Test builds before a release are numbered `X.Y.Z-rc1`,
+  `-rc2`...; a candidate counts as older than the release `X.Y.Z`, so it is
+  told when that comes out. When GitHub can't be reached it also says nothing, and
   tries again an hour later and at the next start. Nothing is downloaded
   or installed. **Help > Check for Updates...** checks at any time and
   always says what it found. Turn the daily check off with Settings >

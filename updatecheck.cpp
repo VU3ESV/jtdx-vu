@@ -40,17 +40,23 @@ namespace
   char const * const last_check_key = "JTDXVU/UpdateLastCheck";    // UTC, ISO 8601; last SUCCESSFUL check (sent at)
   char const * const skip_version_key = "JTDXVU/UpdateSkipVersion";  // tag_name the operator skipped
 
-  // "v0.7.10" -> (0, 7, 10); "1.0" -> (1, 0); nothing numeric -> ()
-  QList<qlonglong> version_parts (QString v)
+  // "v0.7.10" -> (0, 7, 10); "1.0" -> (1, 0); nothing numeric -> (). A release
+  // candidate "0.7.5-rc2" -> (0, 7, 5) with rc 2; rc 0 means the release itself,
+  // which is newer than any candidate of the same number
+  struct Version {QList<qlonglong> parts; qlonglong rc;};
+  Version parse_version (QString v)
   {
     v = v.trimmed ();
     if (v.startsWith ('v', Qt::CaseInsensitive)) v.remove (0, 1);
-    QList<qlonglong> parts;
+    Version r {{}, 0};
+    QRegularExpression const rc {"[-_. ]?rc[-_. ]?(\\d+)\\s*$", QRegularExpression::CaseInsensitiveOption};
+    auto const m = rc.match (v);
+    if (m.hasMatch ()) {r.rc = m.captured (1).toLongLong (); v = v.left (m.capturedStart ());}
     for (auto const& part : v.split (QRegularExpression {"[^0-9]+"}))
       {
-        if (!part.isEmpty ()) parts << part.toLongLong ();
+        if (!part.isEmpty ()) r.parts << part.toLongLong ();
       }
-    return parts;
+    return r;
   }
 
   // the browser only ever goes to GitHub, whatever the reply says
@@ -77,15 +83,18 @@ bool UpdateCheck::automatic_check_due (bool enabled, QString const& version, boo
 
 bool UpdateCheck::is_newer (QString const& candidate, QString const& current)
 {
-  auto const a = version_parts (candidate);
-  auto const b = version_parts (current);
-  for (int i = 0; i < qMax (a.size (), b.size ()); ++i)
+  auto const a = parse_version (candidate);
+  auto const b = parse_version (current);
+  for (int i = 0; i < qMax (a.parts.size (), b.parts.size ()); ++i)
     {
-      auto const x = i < a.size () ? a[i] : 0;
-      auto const y = i < b.size () ? b[i] : 0;
+      auto const x = i < a.parts.size () ? a.parts[i] : 0;
+      auto const y = i < b.parts.size () ? b.parts[i] : 0;
       if (x != y) return x > y;
     }
-  return false;
+  if (a.rc == b.rc) return false;
+  if (!a.rc) return true;          // the release beats its candidates
+  if (!b.rc) return false;
+  return a.rc > b.rc;
 }
 
 QString UpdateCheck::current_version ()
