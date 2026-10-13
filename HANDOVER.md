@@ -274,8 +274,13 @@ Last updated: 2026-10-13
 ### 2026-10-13 — 0.7.5-rc2: rc1 plus the Settings wheel change
 
 Manoj: "cut rc2 with the scroll wheel fix". `Versions.cmake` 0.7.5-rc2 on
-`f2adf4fb`+; macOS and Windows CI (workflow_dispatch) build the zips, which
-replace the rc1 ones in `~/Desktop/jdxvu/test/`.
+`ac0ff136`; macOS CI run 38357866722 and Windows run 38357870178.
+`JTDX-VU-0.7.5-rc2-windows-x64.zip` and `-macos-x86_64.zip` (sha256 OK) are in
+`~/Desktop/jdxvu/test/`, the rc1 ones trashed; the rc2 Intel build launched
+10/10 under Rosetta (crash check). The arm64 zip follows when its job ends.
+Contents: Intel start-up crash fix, third/fourth Flex copy join, aligned
+country column, Canadian provinces, rc-aware update check, Settings boxes
+ignoring an unfocused wheel.
 
 ### 2026-10-13 — Settings: combo and spin boxes take the wheel only when focused (for the next release)
 
