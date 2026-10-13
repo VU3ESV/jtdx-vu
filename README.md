@@ -256,6 +256,9 @@ or Pi 5 is recommended.
   or rig restart arriving while the TCI link was still connecting could
   crash JTDX-VU (same fault as the quit crash fixed in v0.4.0, now closed for every
   path).
+- **Settings boxes ignore a passing scroll** (since the next release). A drop-down or
+  number box in Settings reacts to the mouse wheel only after you click it, so
+  scrolling down the page can't change the rig, a port or a device by accident.
 - **Rig mode shown** (since v0.7.0). The round rig-status light left of the
   frequency is now a box showing the mode the rig reports (DIGU, USB,
   LSB...), in the frequency's font: green when it is the mode set in

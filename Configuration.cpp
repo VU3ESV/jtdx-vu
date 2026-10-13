@@ -141,6 +141,9 @@
 #include <QAudioDeviceInfo>
 #include <QAudioInput>
 #include <QDialog>
+#include <QComboBox>
+#include <QAbstractSpinBox>
+#include <QEvent>
 #include <QAction>
 #include <QFileDialog>
 #include <QFileSystemModel>
@@ -678,6 +681,7 @@ private:
   QLabel * labNewMcDXCCMode_ {nullptr};   // preview on the My Call colour
   void style_pbNewDXCCMode ();
   void vu_notifications_page ();          // JTDX-VU: the redesigned Notifications tab
+  bool eventFilter (QObject *, QEvent *) override;   // JTDX-VU: no wheel on an unfocused box
   std::function<void ()> vu_notify_refresh_;
   QColor color_NewGrid_;
   QColor next_color_NewGrid_;
@@ -1443,6 +1447,11 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
   , default_audio_output_device_selected_ {false}
 {
   ui_->setupUi (this);
+  // JTDX-VU: a scroll across the page must not change a setting - a wheel
+  // over the Rig box moved a profile from Hamlib NET rigctl to the Flex rig
+  // (2026-10-13). A box takes the wheel only once it has been clicked.
+  for (auto * w : findChildren<QComboBox *> ()) {w->setFocusPolicy (Qt::StrongFocus); w->installEventFilter (this);}
+  for (auto * w : findChildren<QAbstractSpinBox *> ()) {w->setFocusPolicy (Qt::StrongFocus); w->installEventFilter (this);}
   {
     // JTDX-VU: a Discover button beside the CAT port box, shown for the
     // FlexRadio VITA-49 rigs only (see set_rig_invariants)
@@ -4902,6 +4911,16 @@ void Configuration::impl::on_pbNewDXCC_clicked()
 // "Already worked", "Messages and markers" and a live preview.  It is a front
 // end: every control drives the original .ui widget (kept, hidden), so the
 // existing slots, enabling rules, saving and loading are unchanged.
+bool Configuration::impl::eventFilter (QObject * o, QEvent * e)
+{
+  if (e->type () == QEvent::Wheel)
+    {
+      auto * w = qobject_cast<QWidget *> (o);
+      if (w && !w->hasFocus ()) {e->ignore (); return true;}
+    }
+  return QDialog::eventFilter (o, e);
+}
+
 void Configuration::impl::vu_notifications_page ()
 {
   auto * tab = ui_->notifications_tab;

@@ -48,7 +48,8 @@ Last updated: 2026-10-13
   US State, and the QO-100 13cm Club Log / JTTY lookups. Unreleased since
   v0.7.4: the country column lined up on bold lines; Canadian provinces in
   Show US State (both 2026-10-11); a third and fourth Flex copy join a GUI
-  client's station; the Intel start-up crash fix (both 2026-10-13).
+  client's station; the Intel start-up crash fix; Settings boxes ignore an
+  unfocused wheel (all 2026-10-13).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -269,6 +270,18 @@ Last updated: 2026-10-13
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-13 — Settings: combo and spin boxes take the wheel only when focused (for the next release)
+
+Manoj's QO-100 profile came up on the Flex rig at 11:40 (its Flex trace was
+born then; only the Rig key had changed; two builds were running that profile
+at once). No code copies a rig between profiles (the rc build's Profile switch
+from a Flex profile to a rigctl one was tried: the target kept rigctl), so the
+likeliest cause is a wheel over the Rig box in Settings > Radio: Qt combos
+change on the wheel. Manoj: "ignore scroll wheel - yes". `Configuration::impl`
+now gives every QComboBox / QAbstractSpinBox in the dialog StrongFocus and an
+event filter that drops QEvent::Wheel unless the box has focus (click first,
+then the wheel works as before). Builds; not yet wheel-tested in the dialog.
 
 ### 2026-10-13 — Test builds are release candidates: 0.7.5-rc1 (version scheme)
 
