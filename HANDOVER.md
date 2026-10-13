@@ -48,7 +48,7 @@ Last updated: 2026-10-13
   US State, and the QO-100 13cm Club Log / JTTY lookups. Unreleased since
   v0.7.4: the country column lined up on bold lines; Canadian provinces in
   Show US State (both 2026-10-11); a third and fourth Flex copy join a GUI
-  client's station (2026-10-13).
+  client's station; the Intel start-up crash fix (both 2026-10-13).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -269,6 +269,36 @@ Last updated: 2026-10-13
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-13 — Start-up crash on Intel Macs: uninitialised dark-style flag (for the next release)
+
+- **Report** (Manoj's photo of a user's AI-assistant write-up; Intel Mac, macOS
+  15.8): 0.7.3 and 0.7.4 crash before any window about half the launches, in
+  `Configuration::impl::vu_notifications_page ()`; 0.7.0 ran reliably. The user
+  went back to 0.7.3 and relaunches when it dies.
+- **Reproduced here:** the verified 0.7.4 x86_64 app run under Rosetta with a
+  throwaway `-r crashtest` profile died 1 of 6 launches (SIGSEGV, EXC_BAD_ACCESS
+  at a wild address); the .ips shows `vu_notifications_page ()` <- `impl::impl`
+  <- `MainWindow::MainWindow`. arm64 never crashed in any test.
+- **Cause:** `impl::impl` calls `vu_notifications_page ()` (line ~1513), which
+  ends with `vu_notify_refresh_ ()` painting every colour swatch through the
+  `dark (light, darkc)` lambda, before `read_settings ()` (line ~1605) sets
+  `useDarkStyle_` - declared without an initialiser (JTDX-VU's redesigned page,
+  v0.6.0). On x86_64 clang compiles the conditional as an indexed select, so
+  a garbage byte becomes a wild pointer; on arm64 the byte happened to be 0.
+- **Fix (`b028c72b`):** `useDarkStyle_ {false}`, also `rig_report_offset_mhz_
+  {0.}` and `qo100_rig_mhz_ {0.}` (the other JTDX-VU members without one), and
+  `vu_notify_refresh_ ()` once more right after `read_settings ()` so the
+  swatches show the real theme. The stock JTDX bools without initialisers
+  (filters, rig flags) are only read after `read_settings ()`; left alone.
+- **Verification:** arm64 builds; the Intel binary comes from macOS CI run
+  38351958875 (workflow_dispatch on `b028c72b`), to be launched 20 times under
+  Rosetta. Not yet done at the time of writing.
+- TCI audit from the MSHV posts Manoj forwarded (RX2 instance keying the wrong
+  slice; crashes): JTDX-VU's `TCITransceiver::do_ptt` keys `trx:<rx_>,true`
+  with rx_ 1 for the "TCI Client RX2" rig, so the receiver is right on our
+  side; what the SDR program does with `trx:1` (moving the TX slice) is its
+  business. Nothing to change.
 
 ### 2026-10-13 — Flex: a third and fourth JTDX-VU join a GUI client's station (for the next release)
 
@@ -3358,6 +3388,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       greyed out for this rig; pick CAT.) (Asked about
       rimuadmin/ProtoFlex, a closed-source Windows-only Flex emulator for
       TeensyMaestro with discovery but no DAX audio: not used.)
+- [ ] **Intel start-up crash fix: verify the CI x86_64 build under Rosetta**
+      (20 launches), then it needs a release - Intel users crash every other
+      start on 0.7.3 / 0.7.4.
 - [ ] **KK4CDK blank lines in Band Activity (Windows):** waiting on his New
       only state and the pane's copied text (2026-10-13 entry).
 - [ ] **Third/fourth VITA-49 copy on one radio** (KK4CDK): BUILT 2026-10-13
