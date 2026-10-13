@@ -271,6 +271,15 @@ Last updated: 2026-10-13
 
 ## What changed
 
+### 2026-10-13 — 0.7.5-rc3 (Windows only) for KK4CDK
+
+Manoj: "make rc3 windows build for miguel". `Versions.cmake` 0.7.5-rc3;
+Windows run 38410084076 (no macOS rc3 cut - the Mac never had the bug).
+`JTDX-VU-0.7.5-rc3-windows-x64.zip` (sha256 OK) is in `~/Desktop/jdxvu/test/`,
+the rc2 Windows zip trashed; its `jtdx.exe` embeds `EL96 FL\n` (rc2 had
+`\r\n`). Contents: rc2 plus the blank-row fix below. Waiting on Miguel to
+confirm the blank rows are gone.
+
 ### 2026-10-13 — Blank rows in Band Activity on Windows: CRLF in the US-state tables (for the next release)
 
 KK4CDK (Miguel)'s blank rows, solved from his copied pane text: every
@@ -3463,7 +3472,7 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       until then. Manoj calls the release.
 - [ ] **KK4CDK blank lines in Band Activity (Windows):** cause found and
       fixed (CRLF in the embedded US-state tables, 2026-10-13 entry);
-      confirm on the next Windows build with Miguel.
+      0.7.5-rc3 Windows zip on the Desktop for him - confirm with Miguel.
 - [ ] **Third/fourth VITA-49 copy on one radio** (KK4CDK): BUILT 2026-10-13
       (non-GUI `client bind` fallback, see entry); works on the fake radio;
       **to test on the 6600 with three copies**, then a Windows trial for
