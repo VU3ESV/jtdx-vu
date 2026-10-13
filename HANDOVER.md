@@ -13,7 +13,7 @@ Last updated: 2026-10-13
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.5-rc2** (last release 0.7.4) (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.5-rc3** (last release 0.7.4) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
