@@ -278,7 +278,11 @@ Manoj: "make rc4 with the PR for testing", then "check all open issues first",
 (PR #3 only, `b0d4fb46`) was superseded: its Windows run died on an MSYS2 mirror
 timeout and the macOS run was cancelled. rc4 = rc3 + PR #3 + the three fixes below.
 Replies posted on #2 (explains the fix, Misc > Bypass all text filters meanwhile)
-and #5 (Intel crash fixed from rc2, closes on release). #1 and #4 not yet answered.
+and #5 (Intel crash fixed from rc2, closes on release). Published as GitHub
+**pre-release `v0.7.5-rc4`** (tag on `2ffe13d0`; tag CI: macOS 38472656522, Windows
+38472656624, both green; the dispatched runs were cancelled as duplicates). All three
+zips sha256 OK, Mac Info.plist and jtdx.exe say 0.7.5-rc4; they replaced the rc3 zips
+in `~/Desktop/jdxvu/test/` (rc3 trashed). VU2OY asked on #1 and #4 to test rc4.
 
 - **#1 TCI, AetherSDR leaves our receiver out of its connect burst** (VU2OY):
   `do_start` now sends `vfo:<rx>,0;` when no frequency arrived, and `do_poll` asks
@@ -3562,9 +3566,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       priority; it works in every AutoSeq mode (not JTTY, no effect in WSPR) but has
       only been tested in FT8. Compare with MSHV's lists before designing; keep the
       stock JTDX settings as they are.
-- [ ] **rc4 testers:** VU2OY for #1 (AetherSDR) and #4 (Flex over WireGuard),
-      iw1gb for #2 (Bypass) - reply on #1 / #4 with the rc4 link once CI is done;
-      close #1, #2, #4, #5 when the release is out.
+- [ ] **rc4 testers:** VU2OY asked (2026-10-14) to test #1 (AetherSDR) and #4
+      (Flex over WireGuard) on the v0.7.5-rc4 pre-release; iw1gb told #2 is fixed.
+      Waiting on VU2OY. Close #1, #2, #4, #5 when 0.7.5 is released.
 - [x] **PR #3 (VU3ESV double-click fixes): try it in the app** - checklist
       PASSED 2026-10-14 on the rc4 bundle (see the PR #3 entry). Still: credit
       Vinod VU3ESV in the release notes.
