@@ -271,6 +271,45 @@ Last updated: 2026-10-13
 
 ## What changed
 
+### 2026-10-14 — 0.7.5-rc4: PR #3 plus issues #1, #2, #4 (test build)
+
+Manoj: "make rc4 with the PR for testing", then "check all open issues first",
+"go ahead with all four", "post the replies and build rc4". A first rc4 CI pair
+(PR #3 only, `b0d4fb46`) was superseded: its Windows run died on an MSYS2 mirror
+timeout and the macOS run was cancelled. rc4 = rc3 + PR #3 + the three fixes below.
+Replies posted on #2 (explains the fix, Misc > Bypass all text filters meanwhile)
+and #5 (Intel crash fixed from rc2, closes on release). #1 and #4 not yet answered.
+
+- **#1 TCI, AetherSDR leaves our receiver out of its connect burst** (VU2OY):
+  `do_start` now sends `vfo:<rx>,0;` when no frequency arrived, and `do_poll` asks
+  again instead of throwing on an empty frequency (`8b0f5ab2`). New
+  `tools/fake_tci.py` switch `FAKE_NO_VFO=1` and `tools/tci_novfo_test.sh`:
+  rc3 (installed app) 5 connects in 25 s and no query; fixed bundle 1 connect,
+  1 vfo query, audio started.
+- **#4 Flex over a VPN** (VU2OY, `4529e5ed`): (1) a "no audio" failure on a
+  connection that had audio is a dropped link, not a firewall - it no longer counts
+  toward the two-strikes stop (`m_flexAudioSeen`, set in `dataSink`, read and
+  cleared in `handle_transceiver_failure`); (2) the offline updates (frequency 0)
+  sent while reconnecting no longer become `m_freqNominal` - with Monitor on they
+  had zeroed `m_lastMonitoredFrequency`, so the reconnect followed the radio's
+  default 14.100 slice (snapped to 14.074). Found with a temporary stderr trace in
+  `handle_transceiver_update` (`last=0` after the offline updates). New
+  `tools/flex_reconnect_test.sh` (MODE=kill / mute, on fake_flex with
+  FAKE_GUI_SLICE): rc3 kill -> back on 14.074; fixed kill -> 21.074 (7 starts),
+  mute -> reconnects on 21.074 (rc3 gave up), FAKE_NO_AUDIO -> still stops after
+  2 starts. Not tried on VU2OY's real VPN link. Part (b) of his report (the
+  radio's own 14.100 fed back while our tune is busy) did not reproduce on the
+  fake radio once (a) was fixed.
+- **#2 Bypass hidden** (iw1gb, `ce8e688d`): the Auto CQ button's Ignored vertical
+  policy gave it ~1 px in the column and its 40 px minimum painted it over Bypass
+  (y=221 h=40 vs y=222), at every window size and language. Now a fixed height.
+  Screenshots of the Italian UI at 593 and 750 px show Bypassa between Auto CQ
+  and 1 QSO.
+- **Test gotcha:** run app tests on `build/bundle/JTDX-VU.app` (`./macos-bundle.sh`),
+  not `build/jtdx.app` - the latter has no `jtdxjt9`, a "Subprocess error" box
+  opens and, being modal, holds the TCI/Flex retry timer, so reconnect tests
+  falsely show no retries. And never relink while a test runs on that binary.
+
 ### 2026-10-14 — PR #3 from Vinod VU3ESV merged: double-click edge cases (for the next release)
 
 Manoj: "take vinod pr 3". First outside PR on the repo; merged as-is with a merge
@@ -3500,6 +3539,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **Intel start-up crash fix: RELEASE it** - verified 20/20 under Rosetta
       (2026-10-13); Intel users crash every other start on 0.7.3 / 0.7.4
       until then. Manoj calls the release.
+- [ ] **rc4 testers:** VU2OY for #1 (AetherSDR) and #4 (Flex over WireGuard),
+      iw1gb for #2 (Bypass) - reply on #1 / #4 with the rc4 link once CI is done;
+      close #1, #2, #4, #5 when the release is out.
 - [ ] **PR #3 (VU3ESV double-click fixes): try it in the app** - merged
       2026-10-14, builds, its test passes; run the PR's checklist (AutoSeq on/off,
       separator line, `<our-call> 73`, Ctrl/Alt/Ctrl+Alt) on fake_flex or on air

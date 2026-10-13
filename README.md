@@ -259,6 +259,8 @@ or Pi 5 is recommended.
 - **Settings boxes ignore a passing scroll** (since the next release). A drop-down or
   number box in Settings reacts to the mouse wheel only after you click it, so
   scrolling down the page can't change the rig, a port or a device by accident.
+- **Bypass button back** (since the next release): the Auto CQ button had been
+  drawn over the Bypass button below it, so Bypass looked missing (iw1gb).
 - **Safer double-click on a decode** (since the next release). Double-clicking a
   separator line, a free-text line under AutoSeq, or a `<your-call> 73` / `RR73`
   line that names no sender no longer flips the Tx period, clears the DX call or
@@ -300,7 +302,10 @@ or Pi 5 is recommended.
   radio sends that audio to the computer over UDP. JTDX-VU first sends the
   radio a packet, so the audio gets back through a firewall, NAT or VPN (since v0.7.4). If
   no audio arrives on two connects in a row, it stops reconnecting and says
-  why (usually the firewall), and clicking the red ERR box reconnects. One
+  why (usually the firewall), and clicking the red ERR box reconnects. Audio
+  that was flowing and then stops (a VPN or network drop) is not a firewall:
+  it keeps retrying until the link is back, and goes back to the frequency
+  you were on (both since the next release). One
   API session, so the radio's relays click once per over. Ported from the
   MSHV-Mac backend. No split: use Fake It or None. The TX slider is the
   radio's RF power (it follows the radio, which keeps power per band; while
@@ -337,6 +342,10 @@ or Pi 5 is recommended.
   audio is back ("TCI audio back"). AetherSDR 26.9.5 can stop sending
   TCI audio after the last audio client has been gone for over 10 s;
   restarting AetherSDR clears it, JTDX-VU can stay open.
+  If the SDR program's opening message leaves out your receiver's frequency
+  (AetherSDR can, when its slice sits on the other TCI receiver), JTDX-VU asks
+  for it instead of reconnecting every 5 s with "TCI sent an unrecognized
+  frequency" (since the next release).
 - **Call Non-Stop:** the **Auto CQ** button in the right-hand button
   column, directly under Monitor in every mode (since v0.5.3), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
   or the next caller instead of halting Tx. Only QSOs from your own CQ
