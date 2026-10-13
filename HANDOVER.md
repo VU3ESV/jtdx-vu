@@ -13,7 +13,7 @@ Last updated: 2026-10-13
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.5-rc1** (last release 0.7.4) (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.5-rc2** (last release 0.7.4) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -270,6 +270,12 @@ Last updated: 2026-10-13
   result: `build/bundle/JTDX-VU.app`.
 
 ## What changed
+
+### 2026-10-13 — 0.7.5-rc2: rc1 plus the Settings wheel change
+
+Manoj: "cut rc2 with the scroll wheel fix". `Versions.cmake` 0.7.5-rc2 on
+`f2adf4fb`+; macOS and Windows CI (workflow_dispatch) build the zips, which
+replace the rc1 ones in `~/Desktop/jdxvu/test/`.
 
 ### 2026-10-13 — Settings: combo and spin boxes take the wheel only when focused (for the next release)
 
