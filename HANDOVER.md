@@ -291,9 +291,12 @@ Last updated: 2026-10-13
   `vu_notify_refresh_ ()` once more right after `read_settings ()` so the
   swatches show the real theme. The stock JTDX bools without initialisers
   (filters, rig flags) are only read after `read_settings ()`; left alone.
-- **Verification:** arm64 builds; the Intel binary comes from macOS CI run
-  38351958875 (workflow_dispatch on `b028c72b`), to be launched 20 times under
-  Rosetta. Not yet done at the time of writing.
+- **Verified:** arm64 builds and starts with dark style on; the Intel binary
+  from macOS CI run 38351958875 (workflow_dispatch on `b028c72b`, sha256 OK)
+  launched **20 of 20** times under Rosetta with a throwaway profile,
+  alternating UseDarkStyle true/false, no crash reports - against 1 crash in
+  6 for the release 0.7.4 x86_64 app the same way. Needs a release for Intel
+  users.
 - TCI audit from the MSHV posts Manoj forwarded (RX2 instance keying the wrong
   slice; crashes): JTDX-VU's `TCITransceiver::do_ptt` keys `trx:<rx_>,true`
   with rx_ 1 for the "TCI Client RX2" rig, so the receiver is right on our
@@ -3388,9 +3391,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       greyed out for this rig; pick CAT.) (Asked about
       rimuadmin/ProtoFlex, a closed-source Windows-only Flex emulator for
       TeensyMaestro with discovery but no DAX audio: not used.)
-- [ ] **Intel start-up crash fix: verify the CI x86_64 build under Rosetta**
-      (20 launches), then it needs a release - Intel users crash every other
-      start on 0.7.3 / 0.7.4.
+- [ ] **Intel start-up crash fix: RELEASE it** - verified 20/20 under Rosetta
+      (2026-10-13); Intel users crash every other start on 0.7.3 / 0.7.4
+      until then. Manoj calls the release.
 - [ ] **KK4CDK blank lines in Band Activity (Windows):** waiting on his New
       only state and the pane's copied text (2026-10-13 entry).
 - [ ] **Third/fourth VITA-49 copy on one radio** (KK4CDK): BUILT 2026-10-13
