@@ -269,6 +269,48 @@ Last updated: 2026-10-13
 
 ## What changed
 
+### 2026-10-13 — KK4CDK's third report: blank lines, a third VITA-49 instance, typing a frequency
+
+Three items in one mail (v0.7.4 on Windows, FLEX-6700).
+
+- **Blank lines in Band Activity** (screenshot: ~10 empty rows among 22
+  decodes of one period, not tied to bold or struck-through lines; he had
+  changed fonts on the earlier advice and found no pattern). **Not
+  reproduced on the Mac:** a `-r aligntest` copy with New only ON and a log
+  where W1AW and DL1ABC are worked hid those two of eight ft8sim lines with no
+  gap (`hide_last_block` / `QTextBlock::setVisible(false)` takes no height on
+  Qt 5.15 here), and with New only off nothing is hidden at all. His
+  screenshot shows struck-through (worked-B4) lines, so New only is probably
+  off for him, which would make the blanks real appended lines - something
+  the Windows decoder/pipe hands `readFromStdout` that the Mac does not
+  (whitespace-only lines would render blank: `appendText` inserts them as
+  is). No guard for that exists. **Waiting on Miguel:** is New only ticked;
+  copy the pane's text (click in it, Ctrl+A, Ctrl+C) so the blank rows'
+  content can be seen.
+- **Third JTDX-VU instance refused** (`client gui refused (0xf3000001)`;
+  two instances fine; closing one lets the third in; he wants four). That
+  is the radio's multiFLEX licence: every FLEX-6000 allows **2 GUI
+  clients** (`licensed_clients=2` in the discovery packet) and JTDX-VU
+  connects as a GUI client (`client gui`). A third/fourth instance would
+  have to connect as a non-GUI client bound to one of the GUI clients
+  (`client bind client_id=<uuid>` of a JTDX-VU GUI client, found in the
+  `client ... connected client_id=... program=JTDX-VU` status lines already
+  kept in `status_log_`), the way SmartSDR's DAX program does; slices then
+  belong to that client's station, so `owned_slice*` would have to accept the
+  bound handle. Needs a real radio with three instances to test (the 6600
+  allows 2 GUI clients too, so Manoj can). About half a day plus the test.
+  **Manoj to decide.**
+- **Typing a frequency in the main window** ("strictly a dropdown"): it is
+  not - the band box is an editable combo (stock JTDX): type `28.088` over
+  the band name and press Enter; `LiveFrequencyValidator::fixup` emits
+  `valid(f)` -> `band_changed` -> `setRig`. **Tested with the Flex rig type**
+  on a `-r freqtest` copy against `tools/fake_flex.py`: the dial showed
+  28.088 000, the box 10m, DIGU kept, and the fake radio logged
+  `slice tune 0 28.088000 autopan=1`. README now says so. If it fails for him
+  on Windows, ask what the box does (red OOB = outside every band).
+- Test leftovers: none (both copies cleaned up). Scratch scripts
+  `aligntest3.sh`, `freqtest_start/stop.sh` live only in the scratchpad.
+
 ### 2026-10-11 — Show US State also shows Canadian provinces (for the next release)
 
 - **Asked for by KK4CDK** (Miguel, after thanking for the US states). Manoj: yes.
@@ -3273,6 +3315,10 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       greyed out for this rig; pick CAT.) (Asked about
       rimuadmin/ProtoFlex, a closed-source Windows-only Flex emulator for
       TeensyMaestro with discovery but no DAX audio: not used.)
+- [ ] **KK4CDK blank lines in Band Activity (Windows):** waiting on his New
+      only state and the pane's copied text (2026-10-13 entry).
+- [ ] **Third/fourth VITA-49 instance on one radio** (KK4CDK): needs the
+      non-GUI `client bind` fallback; Manoj to decide, test on the 6600.
 - [ ] **Red ERR box click against the real radio** (v0.7.4): tested only
       against `tools/fake_flex.py`.
 - [ ] **FlexRadio VITA-49 rig type on the real FLEX-6600** (2026-10-07: connect,

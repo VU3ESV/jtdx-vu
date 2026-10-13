@@ -298,7 +298,9 @@ or Pi 5 is recommended.
   radio's meters and the slice's antennas and mode, and sets transmit power,
   the antenna tuner and the M-series front speaker, as MSHV's Flex panel
   does; antennas are remembered per band for transverter users. Each
-  connection puts the slice back on your last frequency in your data mode. Connecting and
+  connection puts the slice back on your last frequency in your data mode. To go to a
+  frequency that is not in your list (a DXpedition on 28.088, say) type it over the band
+  name in the main window's band box and press Enter; the radio follows. Connecting and
   receiving work on a FLEX-6600; transmit is so far verified only against a
   software stand-in (`tools/flex_selftest.sh`). Each connection appends a
   trace to `flex_trace.txt` in the profile's data folder. If you copy a
