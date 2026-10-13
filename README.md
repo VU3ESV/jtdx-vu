@@ -259,6 +259,11 @@ or Pi 5 is recommended.
 - **Settings boxes ignore a passing scroll** (since the next release). A drop-down or
   number box in Settings reacts to the mouse wheel only after you click it, so
   scrolling down the page can't change the rig, a port or a device by accident.
+- **Safer double-click on a decode** (since the next release). Double-clicking a
+  separator line, a free-text line under AutoSeq, or a `<your-call> 73` / `RR73`
+  line that names no sender no longer flips the Tx period, clears the DX call or
+  arms an empty message, and `RR73` is never taken as a callsign. Contributed by
+  Vinod VU3ESV.
 - **Rig mode shown** (since v0.7.0). The round rig-status light left of the
   frequency is now a box showing the mode the rig reports (DIGU, USB,
   LSB...), in the frequency's font: green when it is the mode set in

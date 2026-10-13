@@ -271,6 +271,29 @@ Last updated: 2026-10-13
 
 ## What changed
 
+### 2026-10-14 — PR #3 from Vinod VU3ESV merged: double-click edge cases (for the next release)
+
+Manoj: "take vinod pr 3". First outside PR on the repo; merged as-is with a merge
+commit, all five of Vinod's commits kept. What it does when a decode is double-clicked
+(or a UDP Reply arrives):
+
+- A separator line, blank line or (under AutoSeq) a free-text line no longer flips
+  the Tx period. Before, with Enable Tx + AutoSeq on, that flip dropped the QSO
+  partner and called CQ in the other period.
+- `<our-call> 73` / `RRR` / `RR73` lines that name no sender do nothing. Before,
+  they cleared the DX call and armed Tx with an empty Tx5.
+- `RR73` is no longer taken as a callsign (`decodedtext.cpp`), so `TU RR73` doesn't
+  make "RR73" the DX call.
+- `Radio::is_callsign("")` no longer reads past the end of the string.
+- New `tools/callparse_test.cpp` (not built by CMake; build lines in its header).
+
+Checked here: the test built against Homebrew qt@5 passes 15/15, and the full app
+(`build/`) compiles and links. **Not yet tried in the running app or on air**: the
+checklist in the PR body (AutoSeq on/off, separator, `<our-call> 73`, Ctrl/Alt/Ctrl+Alt)
+still needs doing. Follow-ups Vinod lists in the PR (a hashed own call isn't
+recognised as "to me", JT65 `left(47)` reaching into the country column, the
+unreachable `DE` branches, the AutoSeq `nonstandard73` frequency check) are not done.
+
 ### 2026-10-13 — 0.7.5-rc3 (Windows only) for KK4CDK
 
 Manoj: "make rc3 windows build for miguel". `Versions.cmake` 0.7.5-rc3;
@@ -3477,6 +3500,10 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **Intel start-up crash fix: RELEASE it** - verified 20/20 under Rosetta
       (2026-10-13); Intel users crash every other start on 0.7.3 / 0.7.4
       until then. Manoj calls the release.
+- [ ] **PR #3 (VU3ESV double-click fixes): try it in the app** - merged
+      2026-10-14, builds, its test passes; run the PR's checklist (AutoSeq on/off,
+      separator line, `<our-call> 73`, Ctrl/Alt/Ctrl+Alt) on fake_flex or on air
+      before the next release. Credit Vinod VU3ESV in the release notes.
 - [ ] **KK4CDK blank lines in Band Activity (Windows):** cause found and
       fixed (CRLF in the embedded US-state tables, 2026-10-13 entry);
       0.7.5-rc3 Windows zip on the Desktop for him - confirm with Miguel.
