@@ -635,8 +635,8 @@ private:
   int rig_resolution_;          // see Transceiver::resolution signal
   double frequency_calibration_intercept_;
   double frequency_calibration_slope_ppm_;
-  double rig_report_offset_mhz_;        // JTDX-VU: taken off every frequency the rig reports
-  double qo100_rig_mhz_;                // JTDX-VU: QO-100 through a transverter - the IF the rig is really set to (0 = off)
+  double rig_report_offset_mhz_ {0.};   // JTDX-VU: taken off every frequency the rig reports
+  double qo100_rig_mhz_ {0.};           // JTDX-VU: QO-100 through a transverter - the IF the rig is really set to (0 = off)
   Frequency qo100_last_nominal_ {0};   // JTDX-VU: the nominal last sent, to put a strayed rig back on the IF
   Frequency rig_side (Frequency f) const {   // what the rig is sent for a nominal frequency
     return qo100_rig_mhz_ > 0. && Radio::is_qo100 (f) ? Frequency (std::llround (qo100_rig_mhz_ * 1.e6)) : f;
@@ -805,7 +805,7 @@ private:
   bool prompt_to_log_;
   bool autolog_;
   bool insert_blank_;
-  bool useDarkStyle_;
+  bool useDarkStyle_ {false};         // JTDX-VU: read by vu_notifications_page () before read_settings () sets it
   bool countryName_;
   bool countryPrefix_;
   bool usState_;   // JTDX-VU: Show US State
@@ -1603,6 +1603,11 @@ Configuration::impl::impl (Configuration * self, QSettings * settings, QWidget *
 
   // this must be done after the default paths above are set
   read_settings ();
+  // JTDX-VU: the Notifications page was built above with the settings not yet
+  // read; its colour swatches showed whatever useDarkStyle_ held - on Intel
+  // Macs an uninitialised byte that clang indexed with, crashing about every
+  // other start (0.7.3 / 0.7.4, macOS 15.8). Paint them from the real settings.
+  if (vu_notify_refresh_) vu_notify_refresh_ ();
 
   //
   // validation
