@@ -277,8 +277,12 @@ Manoj: "make rc3 windows build for miguel". `Versions.cmake` 0.7.5-rc3;
 Windows run 38410084076 (no macOS rc3 cut - the Mac never had the bug).
 `JTDX-VU-0.7.5-rc3-windows-x64.zip` (sha256 OK) is in `~/Desktop/jdxvu/test/`,
 the rc2 Windows zip trashed; its `jtdx.exe` embeds `EL96 FL\n` (rc2 had
-`\r\n`). Contents: rc2 plus the blank-row fix below. Waiting on Miguel to
-confirm the blank rows are gone.
+`\r\n`). Contents: rc2 plus the blank-row fix below. Published as a GitHub
+**pre-release** `v0.7.5-rc3` (Windows zip) for Miguel to download - the update
+check reads `releases/latest`, which skips pre-releases. The tag also set off
+the `v*` CI runs (macOS 38414418685, Windows 38414418267), which add the Mac
+rc3 zips and re-upload the Windows one. Waiting on Miguel to confirm the
+blank rows are gone.
 
 ### 2026-10-13 — Blank rows in Band Activity on Windows: CRLF in the US-state tables (for the next release)
 
