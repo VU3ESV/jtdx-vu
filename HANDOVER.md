@@ -283,8 +283,9 @@ check reads `releases/latest`, which skips pre-releases. The tag also set off
 the `v*` CI runs (macOS 38414418685, Windows 38414418267), which add the Mac
 rc3 zips and re-upload the Windows one (both runs succeeded). The Mac rc3
 zips (sha256 OK) replaced the rc2 ones in `~/Desktop/jdxvu/test/` on
-2026-10-14; the rc3 Intel build has not had the Rosetta launch check. Waiting
-on Miguel to confirm the blank rows are gone.
+2026-10-14; the rc3 Intel build has not had the Rosetta launch check. Manoj
+mailed Miguel the pre-release link on 2026-10-14; waiting on him to confirm
+the blank rows are gone.
 
 ### 2026-10-13 — Blank rows in Band Activity on Windows: CRLF in the US-state tables (for the next release)
 
