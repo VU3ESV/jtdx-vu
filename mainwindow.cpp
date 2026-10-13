@@ -1285,11 +1285,13 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
     button->setFocusPolicy (Qt::NoFocus);
     // its size must not follow the text, or the countdown below would resize
     // it (and with it the whole column): as wide as Monitor above it, and from
-    // the start tall enough for the two-line "Auto CQ" + count
-    button->setSizePolicy (QSizePolicy::Ignored, QSizePolicy::Ignored);
-    button->setMinimumSize (ui->monitorButton->minimumWidth (),
-                            qMin (45, 2 * button->fontMetrics ().lineSpacing () + 8));
-    button->setMaximumSize (ui->monitorButton->maximumWidth (), 45);
+    // the start tall enough for the two-line "Auto CQ" + count. The height is
+    // fixed, not Ignored: an Ignored height got next to no room in the column
+    // and the button's minimum then drew it over Bypass below (iw1gb, issue #2)
+    int const cq_height = qMin (45, 2 * button->fontMetrics ().lineSpacing () + 8);
+    button->setSizePolicy (QSizePolicy::Ignored, QSizePolicy::Fixed);
+    button->setMinimumSize (ui->monitorButton->minimumWidth (), cq_height);
+    button->setMaximumSize (ui->monitorButton->maximumWidth (), cq_height);
     m_cnsButton = button;
     int const column_index = ui->verticalLayout_2->indexOf (ui->monitorButton) + 1;
     ui->verticalLayout_2->insertWidget (column_index, button);
