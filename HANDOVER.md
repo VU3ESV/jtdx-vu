@@ -271,6 +271,24 @@ Last updated: 2026-10-13
 
 ## What changed
 
+### 2026-10-13 — Blank rows in Band Activity on Windows: CRLF in the US-state tables (for the next release)
+
+KK4CDK (Miguel)'s blank rows, solved from his copied pane text: every
+blank row sits right after a US line whose state came from the **grid**
+(KI6QDH DN71 "WY-NE", W6HDG EL96 "FL"); US lines whose state came from the
+callsign (KZ7Y, no grid) had none. The Windows CI checkout
+(`actions/checkout`, `core.autocrlf=true`) turns `us_grid_states.txt` /
+`ca_grid_provinces.txt` / `us_call_states.txt` into CRLF before rcc embeds
+them - the rc2 `jtdx.exe` resource holds `EL96 FL\r\n`. `read_grids`
+split on `\n` only, so the state was `FL\r`, and `QTextCursor::insertText`
+takes that `\r` as a paragraph break: an empty block after the line. The
+call table only reads two characters after the space, so it was clean.
+Mac/Linux checkouts are LF, hence never seen here. Fix: `read_table`
+drops every `\r` (also covers a user's own CRLF copy in the data
+directory), and `.gitattributes` pins the three tables to `eol=lf`.
+Canadian provinces from the grid were affected the same way. Builds on the
+Mac; **to confirm on the next Windows build with Miguel.**
+
 ### 2026-10-13 — 0.7.5-rc2: rc1 plus the Settings wheel change
 
 Manoj: "cut rc2 with the scroll wheel fix". `Versions.cmake` 0.7.5-rc2 on
@@ -3443,8 +3461,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **Intel start-up crash fix: RELEASE it** - verified 20/20 under Rosetta
       (2026-10-13); Intel users crash every other start on 0.7.3 / 0.7.4
       until then. Manoj calls the release.
-- [ ] **KK4CDK blank lines in Band Activity (Windows):** waiting on his New
-      only state and the pane's copied text (2026-10-13 entry).
+- [ ] **KK4CDK blank lines in Band Activity (Windows):** cause found and
+      fixed (CRLF in the embedded US-state tables, 2026-10-13 entry);
+      confirm on the next Windows build with Miguel.
 - [ ] **Third/fourth VITA-49 copy on one radio** (KK4CDK): BUILT 2026-10-13
       (non-GUI `client bind` fallback, see entry); works on the fake radio;
       **to test on the 6600 with three copies**, then a Windows trial for

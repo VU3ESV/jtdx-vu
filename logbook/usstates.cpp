@@ -13,7 +13,9 @@ namespace
   {
     QDir const data {QStandardPaths::writableLocation (QStandardPaths::DataLocation)};
     QFile file {data.exists (name) ? data.absoluteFilePath (name) : ":/" + name};
-    return file.open (QIODevice::ReadOnly) ? file.readAll () : QByteArray {};
+    // a Windows checkout embeds the tables with CRLF; a stray '\r' in a
+    // state ends the line and leaves a blank row in Band Activity
+    return file.open (QIODevice::ReadOnly) ? file.readAll ().replace ('\r', "") : QByteArray {};
   }
 
   void read_grids (QString const& name, QHash<QString, QString>& into)

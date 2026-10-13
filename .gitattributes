@@ -1,1 +1,4 @@
 src export-ignore
+us_grid_states.txt text eol=lf
+ca_grid_provinces.txt text eol=lf
+us_call_states.txt text eol=lf
