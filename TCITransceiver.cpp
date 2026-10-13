@@ -414,6 +414,12 @@ int TCITransceiver::do_start (JTDXDateTime * jtdxtime)
       mysleep2(500);
       busy_split_ = false;
   }
+  // JTDX-VU: some SDR programs (AetherSDR) leave our receiver out of the
+  // connect-time state; ask for its VFO A rather than poll with no frequency
+  if (error_.isEmpty() && rx_frequency_.isEmpty()) {
+    sendTextMessage(CmdVFO + SmDP + rx_ + SmCM + "0" + SmTZ);
+    mysleep1 (500);
+  }
   if (error_.isEmpty()) {
     tci_Ready = true;
     if (!_power_) {
@@ -1578,6 +1584,11 @@ void TCITransceiver::do_poll ()
   }
   if (/*!inConnected && */!error_.isEmpty()) {tci_Ready = false; throw error {error_};}
   else if (!tci_Ready) throw error {tr ("TCI could not be opened")};
+  // JTDX-VU: no VFO A for our receiver yet - ask again instead of failing on ""
+  if (rx_frequency_.isEmpty()) {
+    sendTextMessage(CmdVFO + SmDP + rx_ + SmCM + "0" + SmTZ);
+    return;
+  }
   update_rx_frequency (string_to_frequency (rx_frequency_));
   update_split(split_);
   if (state ().split ()) {

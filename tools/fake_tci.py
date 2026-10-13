@@ -9,6 +9,7 @@
 # simulate the SDR program closing; start it again to see the client reconnect.
 # FAKE_TRX_DELAY=0.35 delays the trx (PTT) echo as AetherSDR does - the Fake It
 # split runaway needs it.
+# FAKE_NO_VFO=1 leaves vfo:0,0 out of the start-up burst (AetherSDR, issue #1).
 import socket, hashlib, base64, threading, time, sys, struct
 G = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 log = open(sys.argv[1], 'a', buffering=1)
@@ -142,9 +143,12 @@ def serve(c):
     acc = base64.b64encode(hashlib.sha1(key + G).digest())
     c.sendall(b"HTTP/1.1 101 Switching Protocols\r\nUpgrade: websocket\r\nConnection: Upgrade\r\nSec-WebSocket-Accept: " + acc + b"\r\n\r\n")
     log.write("%.3f connected\n" % time.time())
+    # FAKE_NO_VFO=1 leaves our receiver's vfo out of the burst, as AetherSDR does
+    # when its slice is on another receiver index (jtdx-vu issue #1)
+    vfo = "" if os.environ.get("FAKE_NO_VFO") else "vfo:0,0,%s;" % state["vfo:0,0"]
     c.sendall(frame("protocol:fake,1.5;device:FakeSDR;receive_only:false;trx_count:2;channels_count:2;"
-                    "vfo:0,0,%s;modulation:0,%s;split_enable:0,false;drive:50;start;ready;"
-                    % (state["vfo:0,0"], state["modulation:0"])))
+                    "%smodulation:0,%s;split_enable:0,false;drive:50;start;ready;"
+                    % (vfo, state["modulation:0"])))
     alive = [False, True]
     lock = threading.Lock()
     threading.Thread(target=pusher, args=(c, alive, lock), daemon=True).start()
