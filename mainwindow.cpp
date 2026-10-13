@@ -2109,6 +2109,7 @@ void MainWindow::writeHaltTxEvent(QString reason)
 void MainWindow::dataSink(qint64 frames)
 {
   m_flexNoAudioCount = 0;          // JTDX-VU: audio is arriving
+  m_flexAudioSeen = true;
   if (m_tciNoAudio && m_tci) {   // JTDX-VU: TCI audio is flowing again
     m_tciNoAudio = false;
     showStatusMessage (tr ("TCI audio back"), 10000);
@@ -7887,9 +7888,14 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
   // at every connect (KK4CDK's trace, 2026-10-10).
   bool const flex_online = !old_state.online () && s.online () && m_config.rig_name ().startsWith ("FlexRadio VITA");
   Frequency const flex_want = flex_online ? m_lastMonitoredFrequency : 0;
+  // The offline updates (frequency 0) sent while a Flex reconnects must not
+  // become our frequency: with Monitor on they set the remembered one to 0, and
+  // the reconnect then followed the radio's default slice (14.100, snapped to
+  // 14.074) instead of going back to the band we were on (VU2OY, issue #4)
+  bool const flex_offline = !s.online () && m_config.rig_name ().startsWith ("FlexRadio VITA");
   m_rigState = s;
   auto old_freqNominal = m_freqNominal;
-  m_freqNominal = flex_want ? flex_want : s.frequency ();
+  m_freqNominal = flex_want ? flex_want : flex_offline ? m_freqNominal : s.frequency ();
   // initializing
   if (old_state.online () == false && s.online () == true) {
       on_monitorButton_clicked(true);
@@ -7983,14 +7989,18 @@ void MainWindow::handle_transceiver_failure (QString const& reason)
   m_rigOk=false;
   ui->readFreq->setEnabled (true);
   haltTx("Rig control error: " + reason + " ");
+  bool const flex_audio_seen = m_flexAudioSeen;   // JTDX-VU: on the connection that just failed
+  m_flexAudioSeen = false;
   // JTDX-VU: TCI - keep retrying quietly instead of the Rig Control Error
   // dialog, so it comes back on its own once the SDR program is running again
   if (m_config.is_tci ()) {
     // JTDX-VU: a FlexRadio whose DAX audio never arrives (a firewall, a VPN)
     // would be reconnected - and re-tuned, relays clicking - every 15 s for
     // ever. After two in a row, stop and say why; the ERR button reconnects.
+    // Audio that flowed on this connection and then stopped is a dropped link
+    // (a VPN outage), not a firewall: keep retrying (VU2OY, issue #4).
     if (reason.contains ("no audio") && m_config.rig_name ().startsWith ("FlexRadio VITA")
-        && ++m_flexNoAudioCount >= 2) {
+        && !flex_audio_seen && ++m_flexNoAudioCount >= 2) {
       m_flexNoAudioCount = 0;
       m_tciReconnecting = false;
       m_tciNoAudio = true;
