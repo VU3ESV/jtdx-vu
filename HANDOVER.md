@@ -333,6 +333,23 @@ still needs doing. Follow-ups Vinod lists in the PR (a hashed own call isn't
 recognised as "to me", JT65 `left(47)` reaching into the country column, the
 unreachable `DE` branches, the AutoSeq `nonstandard73` frequency check) are not done.
 
+**Checklist run 2026-10-14** (Manoj: "run the PR #3 checklist on rc4") on the local
+rc4 bundle (`2ffe13d0` code), throwaway `-r pr3test` on `tools/fake_tci.py` playing
+two `ft8sim` mixes (even: `CQ K1ABC FN42`, `VU2CPL 73`, `TU RR73`, `VU2CPL RR73`,
+`VU2CPL W9XYZ -12`; odd: `CQ JA1XYZ PM95`, `TNX 73 GL`), `InsertBlank=true` for
+separator lines, `WriteDecodedDebugALLTXT=true`, Monitor off so the pane stays put,
+real double-clicks (a scratch CGEvent tool with Cmd/Option flags - on macOS Qt's
+Ctrl is Cmd). All seven items pass:
+- AutoSeq on, Enable Tx on, mid-QSO with W9XYZ (Tx3, 15/45): separator,
+  `TNX 73 GL` (other period), `VU2CPL 73`, `VU2CPL RR73`, `TU RR73` - DX call,
+  period, Tx3 and Enable Tx unchanged every time; DX call never `RR73`.
+- AutoSeq off, period 15/45: separator - period unchanged (report reset to 0,
+  the older behaviour the PR leaves alone); `TNX 73 GL` from :45 - period flips
+  to 00/30, report -8 (its SNR).
+- Plain double-click on CQ answers (period flips); Cmd: Tx to the decode's 700 Hz;
+  Option: answers with Enable Tx off; Cmd+Option: K1ABC into Wanted, DX unchanged.
+- ALL.TXT: "double click on call processed" only for the 4 answered clicks.
+
 ### 2026-10-13 — 0.7.5-rc3 (Windows only) for KK4CDK
 
 Manoj: "make rc3 windows build for miguel". `Versions.cmake` 0.7.5-rc3;
@@ -3542,10 +3559,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [ ] **rc4 testers:** VU2OY for #1 (AetherSDR) and #4 (Flex over WireGuard),
       iw1gb for #2 (Bypass) - reply on #1 / #4 with the rc4 link once CI is done;
       close #1, #2, #4, #5 when the release is out.
-- [ ] **PR #3 (VU3ESV double-click fixes): try it in the app** - merged
-      2026-10-14, builds, its test passes; run the PR's checklist (AutoSeq on/off,
-      separator line, `<our-call> 73`, Ctrl/Alt/Ctrl+Alt) on fake_flex or on air
-      before the next release. Credit Vinod VU3ESV in the release notes.
+- [x] **PR #3 (VU3ESV double-click fixes): try it in the app** - checklist
+      PASSED 2026-10-14 on the rc4 bundle (see the PR #3 entry). Still: credit
+      Vinod VU3ESV in the release notes.
 - [ ] **KK4CDK blank lines in Band Activity (Windows):** cause found and
       fixed (CRLF in the embedded US-state tables, 2026-10-13 entry);
       0.7.5-rc3 Windows zip on the Desktop for him - confirm with Miguel.
