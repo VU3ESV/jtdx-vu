@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-13
+Last updated: 2026-10-14
 
 ## Current state
 
@@ -338,8 +338,8 @@ rc4 bundle (`2ffe13d0` code), throwaway `-r pr3test` on `tools/fake_tci.py` play
 two `ft8sim` mixes (even: `CQ K1ABC FN42`, `VU2CPL 73`, `TU RR73`, `VU2CPL RR73`,
 `VU2CPL W9XYZ -12`; odd: `CQ JA1XYZ PM95`, `TNX 73 GL`), `InsertBlank=true` for
 separator lines, `WriteDecodedDebugALLTXT=true`, Monitor off so the pane stays put,
-real double-clicks (a scratch CGEvent tool with Cmd/Option flags - on macOS Qt's
-Ctrl is Cmd). All seven items pass:
+real double-clicks (`tools/click.swift x y 2 cmd|alt|cmdalt` - on macOS Qt's Ctrl is
+Cmd; rows found with `tools/decode_rows.py` on a fresh screenshot before each click). All seven items pass:
 - AutoSeq on, Enable Tx on, mid-QSO with W9XYZ (Tx3, 15/45): separator,
   `TNX 73 GL` (other period), `VU2CPL 73`, `VU2CPL RR73`, `TU RR73` - DX call,
   period, Tx3 and Enable Tx unchanged every time; DX call never `RR73`.
