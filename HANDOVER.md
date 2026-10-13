@@ -281,7 +281,10 @@ likeliest cause is a wheel over the Rig box in Settings > Radio: Qt combos
 change on the wheel. Manoj: "ignore scroll wheel - yes". `Configuration::impl`
 now gives every QComboBox / QAbstractSpinBox in the dialog StrongFocus and an
 event filter that drops QEvent::Wheel unless the box has focus (click first,
-then the wheel works as before). Builds; not yet wheel-tested in the dialog.
+then the wheel works as before). **Wheel-tested** 2026-10-13 on a `-r wheeltest`
+copy of the rc1 bundle: unfocused scrolls over IARU Region, Tx watchdog and
+the Rig box changed nothing; after a click the Tune timer went 30 -> 35 s and
+the Rig box moved one entry (None -> ADAT ADT-2) per notch; Cancelled.
 
 ### 2026-10-13 — Test builds are release candidates: 0.7.5-rc1 (version scheme)
 
