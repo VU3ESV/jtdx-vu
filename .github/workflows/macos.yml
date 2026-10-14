@@ -2,6 +2,9 @@
 # macOS 14+) and Intel (macos-15-intel). Each is a self-contained,
 # ad-hoc signed JTDX-VU.app from macos-bundle.sh, zipped with ditto.
 # Runs on demand or on a v* tag; on a tag the zips go to that release.
+# Release zips are then re-signed with the Developer ID, notarised and
+# re-uploaded from the maintainer's Mac (macos-notarize.sh), so the
+# certificate never goes into GitHub secrets.
 name: macos
 
 on:

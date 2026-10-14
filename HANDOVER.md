@@ -267,9 +267,33 @@ Last updated: 2026-10-14
   may need redoing after a macOS upgrade.
 - **Build and bundle:** see `README.md`. `./macos-bundle.sh` runs the
   CMake install step, then macdeployqt and the fix-ups, and signs the
-  result: `build/bundle/JTDX-VU.app`.
+  result ad-hoc: `build/bundle/JTDX-VU.app`.
+- **Releases are Developer ID signed + notarised (from 2026-10-14):** after the
+  tag CI attaches the ad-hoc zips, download the two macOS zips, run
+  `./macos-notarize.sh JTDX-VU-<ver>-macos-arm64.zip JTDX-VU-<ver>-macos-x86_64.zip`
+  (identity "Developer ID Application: Manoj Ramawarrier (CHVNJ85C9F)", notary
+  keychain profile `MSHV-NOTARY` shared with MSHV-Mac), then
+  `gh release upload <tag> JTDX-VU-*-macos-*.zip* --clobber`. Check with
+  `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-10-14 — Developer ID signing + notarisation for releases
+
+Manoj: "use mshv notary script and sign future releases with my certificate".
+New `macos-notarize.sh` (adapted from MSHV-Mac `macos/notarize.sh` and the
+signing block of its `build-standalone.sh`) and `Darwin/JTDX-VU.entitlements`
+(disable-library-validation + audio-input, as MSHV). It takes the CI zips,
+re-signs `--deep` with the Developer ID, hardened runtime and `--timestamp`,
+checks the audio-input entitlement, submits with `notarytool --wait` (fails
+and prints the log unless Accepted), staples, and rewrites the zip
+(`ditto --norsrc`) and `.sha256` in place. CI stays ad-hoc so no certificate
+or Apple credentials go into GitHub secrets. Tested on a scratch copy of the
+rc4 arm64 zip: Apple status Accepted (c4dbabf7-e6de-4619-a3cc-362c541054e9),
+`spctl` "Notarized Developer ID"; unzipped with `unzip` (no `._` files),
+quarantined, `open`ed: launched translocated with no Gatekeeper prompt and
+`jtdxjt9` started. The published rc4 zips are unchanged (still ad-hoc).
+README first-launch and release-build text updated.
 
 ### 2026-10-14 — 0.7.5-rc4: PR #3 plus issues #1, #2, #4 (test build)
 

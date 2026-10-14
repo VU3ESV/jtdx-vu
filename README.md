@@ -43,8 +43,11 @@ stock JTDX on macOS and Windows; on the Pi the package replaces a stock
 1. Download the zip for your Mac (Apple menu > About This Mac: "Apple
    M…" chip = arm64, "Intel" = x86_64) and double-click it to unzip.
 2. Drag **JTDX-VU** into **Applications**.
-3. **First launch.** The app is ad-hoc signed, not notarized, so macOS
-   blocks the first open:
+3. **First launch.** From the next release the app is signed with a
+   Developer ID and notarized by Apple, so it opens with only the usual
+   "downloaded from the internet" question. Releases up to v0.7.4 and the
+   0.7.5 test builds are ad-hoc signed, not notarized, and macOS blocks
+   their first open:
    - macOS 15 Sequoia and later: double-click JTDX-VU, click **Done** on
      the warning, then open **System Settings > Privacy & Security**,
      scroll down and click **Open Anyway** next to "JTDX-VU was
@@ -463,6 +466,11 @@ or Pi 5 is recommended.
 - **Windows and macOS release builds** come from GitHub Actions
   (`.github/workflows/windows.yml`, `macos.yml`). Run them from the
   Actions tab, or push a `v*` tag to attach the builds to that release.
+  CI signs the Mac apps ad-hoc; `./macos-notarize.sh <zip>...` then
+  re-signs them on the maintainer's Mac with the Developer ID (hardened
+  runtime, `Darwin/JTDX-VU.entitlements`), notarizes and staples them, and
+  rewrites the zip and its `.sha256` in place for
+  `gh release upload <tag> JTDX-VU-*-macos-*.zip* --clobber`.
 - **Raspberry Pi / Debian 12:**
   `sudo apt install qtbase5-dev qtmultimedia5-dev libqt5websockets5-dev libqt5serialport5-dev libhamlib-dev libhamlib-utils libfftw3-dev gfortran qttools5-dev-tools qttools5-dev libqt5svg5-dev cmake`,
   then

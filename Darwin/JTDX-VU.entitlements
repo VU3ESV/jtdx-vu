@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    Hardened-runtime entitlements for the Developer ID signed JTDX-VU.app
+    (macos-notarize.sh), same set as MSHV-Mac's macos/entitlements.plist.
+
+    com.apple.security.cs.disable-library-validation
+        The bundle carries Homebrew's Qt 5, gfortran, FFTW and Hamlib
+        dylibs in Contents/Frameworks. They are re-signed with our
+        Developer ID, but this keeps a stray one from being refused.
+
+    com.apple.security.device.audio-input
+        Soundcard capture. Without it the hardened runtime never shows the
+        microphone prompt (NSMicrophoneUsageDescription in Info.plist) and
+        a first-time user decodes silence.
+-->
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.cs.disable-library-validation</key>
+    <true/>
+    <key>com.apple.security.device.audio-input</key>
+    <true/>
+</dict>
+</plist>
