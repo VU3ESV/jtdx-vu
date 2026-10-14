@@ -292,7 +292,12 @@ or Apple credentials go into GitHub secrets. Tested on a scratch copy of the
 rc4 arm64 zip: Apple status Accepted (c4dbabf7-e6de-4619-a3cc-362c541054e9),
 `spctl` "Notarized Developer ID"; unzipped with `unzip` (no `._` files),
 quarantined, `open`ed: launched translocated with no Gatekeeper prompt and
-`jtdxjt9` started. The published rc4 zips are unchanged (still ad-hoc).
+`jtdxjt9` started. Then, on Manoj's yes, the published **rc4 macOS zips were
+replaced** by notarised ones (arm64 08edd53d-963f-4a60-a558-0ee99023f7dc, x86_64
+42b015c0-c610-4984-a730-e5185cf316e1, both Accepted; `gh release upload --clobber`
+with new `.sha256`); anonymous downloads checksum OK, "Notarized Developer ID",
+ticket stapled, 0.7.5-rc4, right arch. `~/Desktop/jdxvu/test/` holds the same
+notarised zips. Windows zip untouched (still not code-signed).
 README first-launch and release-build text updated.
 
 ### 2026-10-14 — 0.7.5-rc4: PR #3 plus issues #1, #2, #4 (test build)
