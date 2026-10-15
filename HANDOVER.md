@@ -286,7 +286,10 @@ Manoj: "it worked at Miguel". Miguel's screenshot (1650 UTC): four JTDX-VU
 (B 17m, C 12m, D 20m, plus 10m), all decoding FT8 with the US state and country
 columns filled in, AutoSeq on, his `CQ KK4CDK EL95` loaded. So rc5 runs on his
 setup with several slices up together. The screenshot can't show the late Tx
-start cutoff or the #6 fix at work; no report on those yet.
+start cutoff or the #6 fix at work; no report on those yet. Manoj sent a mail
+asking Miguel how late Enable Tx behaves on rc5 (draft in
+`~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-15b.txt`).
+**Waiting on Miguel.**
 
 ### 2026-10-15 — 0.7.5-rc5: rc4 plus the late Tx start cutoff and #6 (test build)
 
