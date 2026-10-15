@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-14
+Last updated: 2026-10-15
 
 ## Current state
 
@@ -278,6 +278,14 @@ Last updated: 2026-10-14
 
 ## What changed
 
+### 2026-10-15 — KK4CDK confirms: no blank rows in Band Activity on Windows
+
+Miguel sent a Windows screenshot of the FT8 pane (20m, 2139-2140 UTC) on the
+0.7.5 pre-release: no empty rows, and grid-derived states (`MA-NH`,
+`CA-AZ-NV`) and the country column show inline after US lines, which is
+where the blank rows used to be. Manoj: "i think the issue is sorted". The
+CRLF fix (2026-10-13 entry) is confirmed on Windows; it ships with 0.7.5.
+
 ### 2026-10-14 — Developer ID signing + notarisation for releases
 
 Manoj: "use mshv notary script and sign future releases with my certificate".
@@ -396,8 +404,8 @@ the `v*` CI runs (macOS 38414418685, Windows 38414418267), which add the Mac
 rc3 zips and re-upload the Windows one (both runs succeeded). The Mac rc3
 zips (sha256 OK) replaced the rc2 ones in `~/Desktop/jdxvu/test/` on
 2026-10-14; the rc3 Intel build has not had the Rosetta launch check. Manoj
-mailed Miguel the pre-release link on 2026-10-14; waiting on him to confirm
-the blank rows are gone.
+mailed Miguel the pre-release link on 2026-10-14; he confirmed the blank rows
+are gone on 2026-10-15.
 
 ### 2026-10-13 — Blank rows in Band Activity on Windows: CRLF in the US-state tables (for the next release)
 
@@ -415,7 +423,7 @@ Mac/Linux checkouts are LF, hence never seen here. Fix: `read_table`
 drops every `\r` (also covers a user's own CRLF copy in the data
 directory), and `.gitattributes` pins the three tables to `eol=lf`.
 Canadian provinces from the grid were affected the same way. Builds on the
-Mac; **to confirm on the next Windows build with Miguel.**
+Mac; **confirmed on Windows by Miguel 2026-10-15.**
 
 ### 2026-10-13 — 0.7.5-rc2: rc1 plus the Settings wheel change
 
@@ -3601,9 +3609,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [x] **PR #3 (VU3ESV double-click fixes): try it in the app** - checklist
       PASSED 2026-10-14 on the rc4 bundle (see the PR #3 entry). Still: credit
       Vinod VU3ESV in the release notes.
-- [ ] **KK4CDK blank lines in Band Activity (Windows):** cause found and
+- [x] **KK4CDK blank lines in Band Activity (Windows):** cause found and
       fixed (CRLF in the embedded US-state tables, 2026-10-13 entry);
-      0.7.5-rc3 Windows zip on the Desktop for him - confirm with Miguel.
+      **confirmed by Miguel's screenshot 2026-10-15** - no blank rows.
 - [ ] **Third/fourth VITA-49 copy on one radio** (KK4CDK): BUILT 2026-10-13
       (non-GUI `client bind` fallback, see entry); works on the fake radio;
       **to test on the 6600 with three copies**, then a Windows trial for
