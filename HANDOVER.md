@@ -279,6 +279,21 @@ Last updated: 2026-10-15
 
 ## What changed
 
+### 2026-10-15 — 0.7.5-rc5: rc4 plus the late Tx start cutoff and #6 (test build)
+
+Manoj: "make rc5". `Versions.cmake` 0.7.5-rc5 (`223967cf`); published as GitHub
+**pre-release `v0.7.5-rc5`** (tag CI: Windows 38763264945 18 min, macOS
+38763264795, both green). rc5 = rc4 + the late Tx start cutoff (KK4CDK), the
+AutoSeq fix for #6 and the `macos-bundle.sh` @rpath fix (CI's macOS job runs it).
+The two macOS zips were notarised with `macos-notarize.sh` (arm64
+1cf4b115-e52f-4b3f-bd15-b2b1be8cfcbc, x86_64 46ffbae1-c974-4294-8417-05fc3bc7c666,
+both Accepted, stapled) and replaced on the release (`--clobber`); anonymous
+downloads checksum OK and "Notarized Developer ID", 0.7.5-rc5, right arch. Windows
+zip sha256 OK, `jtdx.exe` says 0.7.5-rc5. All three replaced the rc4 zips in
+`~/Desktop/jdxvu/test/` (rc4 trashed). Reply posted on #6 pointing to rc5. Mail to
+Miguel with the rc5 Windows link drafted in
+`~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-15.txt`; Manoj sends it.
+
 ### 2026-10-15 — macos-bundle.sh copies any missing @rpath library (Homebrew freetype now needs brotli)
 
 A bundle built at 20:28 died at launch: "Could not load the Qt platform plugin
@@ -3684,8 +3699,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [x] **KK4CDK blank lines in Band Activity (Windows):** cause found and
       fixed (CRLF in the embedded US-state tables, 2026-10-13 entry);
       **confirmed by Miguel's screenshot 2026-10-15** - no blank rows.
-- [ ] **Late Tx start cutoff (2026-10-15):** passed on fake TCI; next a Windows
-      build for Miguel (when Manoj cuts rc5).
+- [ ] **Late Tx start cutoff (2026-10-15):** passed on fake TCI; in rc5. Manoj
+      to mail Miguel the rc5 Windows link (draft in JTDX-records); then wait
+      for his report.
 - [ ] **Third/fourth VITA-49 copy on one radio** (KK4CDK): BUILT 2026-10-13
       (non-GUI `client bind` fallback, see entry); works on the fake radio;
       **to test on the 6600 with three copies**, then a Windows trial for
