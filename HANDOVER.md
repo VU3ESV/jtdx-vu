@@ -279,6 +279,15 @@ Last updated: 2026-10-15
 
 ## What changed
 
+### 2026-10-15 — KK4CDK: rc5 works on Windows, four Flex slices at once
+
+Manoj: "it worked at Miguel". Miguel's screenshot (1650 UTC): four JTDX-VU
+0.7.5-rc5 instances on Windows, each on its own FLEX-6700 VITA-49 slice
+(B 17m, C 12m, D 20m, plus 10m), all decoding FT8 with the US state and country
+columns filled in, AutoSeq on, his `CQ KK4CDK EL95` loaded. So rc5 runs on his
+setup with several slices up together. The screenshot can't show the late Tx
+start cutoff or the #6 fix at work; no report on those yet.
+
 ### 2026-10-15 — 0.7.5-rc5: rc4 plus the late Tx start cutoff and #6 (test build)
 
 Manoj: "make rc5". `Versions.cmake` 0.7.5-rc5 (`223967cf`); published as GitHub
