@@ -3613,7 +3613,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 - [ ] **Issue #6 fix** (2026-10-15): unit test 5/5 and **passed in the app on
       fake TCI** (old code reproduces #6, fixed code keeps the report). Reply on
-      #6 once it's in a build (rc5).
+      #6 posted 2026-10-15 pointing to the rc5 pre-release; waiting on
+      marinfyi to try it on air. Close #6 when 0.7.5 is released.
 - [x] **Update check in the real app** — TESTED by Manoj 2026-10-09 in the
       installed v0.7.3 ("mac expert, kst2mac, jtdx vu, mshv all tested").
       Was: (`e9796edb`, `0bd95894`, released in
