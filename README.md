@@ -269,6 +269,12 @@ or Pi 5 is recommended.
   line that names no sender no longer flips the Tx period, clears the DX call or
   arms an empty message, and `RR73` is never taken as a callsign. Contributed by
   Vinod VU3ESV.
+- **No cut-off late transmission** (since the next release). Enable Tx (or an
+  AutoSeq reply) late in your Tx period no longer keys up and sends only the tail
+  of the message, which the other station can't decode. A late start is allowed
+  only in the first fifth of the period (FT8 3 s, FT4 1.5 s, FT2 0.75 s, JT65 /
+  JT9 12 s); after that Enable Tx stays on and Tx starts at your next period
+  (KK4CDK). JTTY and WSPR are unchanged.
 - **Rig mode shown** (since v0.7.0). The round rig-status light left of the
   frequency is now a box showing the mode the rig reports (DIGU, USB,
   LSB...), in the frequency's font: green when it is the mode set in

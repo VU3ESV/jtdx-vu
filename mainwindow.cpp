@@ -4727,7 +4727,12 @@ void MainWindow::guiUpdate()
       m_processAuto_done = true;
       process_Auto();
     }
-    if(g_iptt==0 and ((m_bTxTime and fTR<99.0) or m_tune )) {   //### Allow late starts
+    // JTDX-VU: allow a late start only in the first 20% of the period (FT8 3 s,
+    // FT4 1.5 s, FT2 0.75 s, JT65/JT9 12 s). Later, the Modulator would skip
+    // ahead and send only the tail of the message, which nobody decodes; wait
+    // for the next Tx period instead. JTTY (period-free) and WSPR keep the old rule.
+    bool lateStartOk = fTR<0.2 || m_mode=="JTTY" || m_mode.startsWith("WSPR");
+    if(g_iptt==0 and ((m_bTxTime and lateStartOk) or m_tune )) {   //### Allow late starts
       icw[0]=m_ncw;
       g_iptt = 1;
       setRig ();

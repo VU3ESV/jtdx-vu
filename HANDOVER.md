@@ -49,7 +49,8 @@ Last updated: 2026-10-15
   v0.7.4: the country column lined up on bold lines; Canadian provinces in
   Show US State (both 2026-10-11); a third and fourth Flex copy join a GUI
   client's station; the Intel start-up crash fix; Settings boxes ignore an
-  unfocused wheel (all 2026-10-13).
+  unfocused wheel (all 2026-10-13); no late Tx start after the first 20% of the
+  period (2026-10-15).
 - **Release v0.5.0: COMPLETE 2026-10-02** — https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.5.0,
   tag `v0.5.0` on `2a6c710f`. Notes carry a full per-OS "How to
   install" (same text as README's new section). All four builds plus
@@ -277,6 +278,25 @@ Last updated: 2026-10-15
   `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-10-15 — No late Tx start after the first 20% of the period (for the next release)
+
+KK4CDK (Miguel): "sometimes I hit the ENABLE Tx and it triggers TX even though
+is out of sync, so that short call is lost". Stock JTDX behaviour: the start
+check in `guiUpdate` was `m_bTxTime and fTR<99.0` (always true), so PTT keyed
+at any point in the Tx period and the Modulator skipped ahead (`m_ic` from
+`mstr - delay_ms`), sending only the tail of the message. Now
+`lateStartOk = fTR<0.2` (FT8 3 s, FT4 1.5 s, FT2 0.75 s, JT65/JT9 12 s);
+JTTY (period-free) and WSPR (scheduled at `m_nseq==0`) keep the old rule, Tune
+is not affected. Past the cutoff Enable Tx stays on and Tx starts at the next
+Tx period. The 20% also covers AutoSeq replies armed by a slow decode just
+after the period starts (up to 3 s in FT8). Builds on the Mac; **not yet tried
+in the app** (fake TCI: enable Tx at ~1 s and ~6 s into the Tx period).
+
+Miguel also asked for a right-click on Halt Tx to "wait till available" (auto
+after 4 tries, resume when the DX is free) from "a previous version" - not in
+JTDX 2.2.159 (nearest: Settings > Counters, the call-after-73 modes). Reply
+drafted asking which program had it; not started.
 
 ### 2026-10-15 — KK4CDK confirms: no blank rows in Band Activity on Windows
 
@@ -3612,6 +3632,10 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - [x] **KK4CDK blank lines in Band Activity (Windows):** cause found and
       fixed (CRLF in the embedded US-state tables, 2026-10-13 entry);
       **confirmed by Miguel's screenshot 2026-10-15** - no blank rows.
+- [ ] **Late Tx start cutoff (2026-10-15): try in the app** with fake TCI, then
+      a Windows build for Miguel.
+- [ ] **KK4CDK "wait till available" on Halt Tx:** asked Miguel (2026-10-15)
+      which program had it; design after his answer. Manoj decides.
 - [ ] **Third/fourth VITA-49 copy on one radio** (KK4CDK): BUILT 2026-10-13
       (non-GUI `client bind` fallback, see entry); works on the fake radio;
       **to test on the 6600 with three copies**, then a Windows trial for
