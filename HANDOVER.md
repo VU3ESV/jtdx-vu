@@ -279,6 +279,19 @@ Last updated: 2026-10-15
 
 ## What changed
 
+### 2026-10-15 — macos-bundle.sh copies any missing @rpath library (Homebrew freetype now needs brotli)
+
+A bundle built at 20:28 died at launch: "Could not load the Qt platform plugin
+cocoa" - `libqcocoa` -> `libbrotlidec` -> `@rpath/libbrotlicommon.1.dylib`, not in
+`Frameworks/`. Homebrew upgraded freetype at 19:05 that day and it now links
+brotli; the 13:43 bundle was fine. macdeployqt doesn't follow `@rpath`, and the
+script's checks only looked at `@loader_path`/`@executable_path` and absolute
+Homebrew paths, so it said OK. Now a loop copies every `@rpath/<lib>` a bundled
+dylib names from `$BREW/lib` or `$BREW/opt/*/lib` until none are missing, and a
+check fails the script if one still is. The CI macOS job runs the same script,
+so the rc5 Mac builds need this once the runners get the new freetype. The
+rebuilt bundle launches and ran the #6 test.
+
 ### 2026-10-15 — AutoSeq keeps the report when the DX finishes with someone else (issue #6, for the next release)
 
 marinfyi (#6): OK1JRD answered their CQ and got -17, worked F4LQJ meanwhile, and
@@ -294,7 +307,20 @@ posted on #6 before the fix (cause + Skip Tx1 workaround, says a change is
 being looked at).
 - New `tools/qsoseq_test.cpp` (not built by CMake; build lines in its header):
   5/5 pass with the fix, the #6 case fails on the old `qsohistory.cpp`. Full app
-  (`build/`) compiles and links. **Not yet tried in the running app or on air.**
+  (`build/`) compiles and links.
+- **Tested in the app 2026-10-15** (bundle, throwaway `-r q6test`, `tools/fake_tci.py`
+  with `FAKE_TCI_WAVS` cycling 12 ft8sim periods: `VU2CPL OK1JRD JN79`, silence,
+  `F4LQJ OK1JRD R+11`, silence, `F4LQJ OK1JRD 73`, 7x silence; Enable Tx by UDP
+  TriggerCQ; Skip Tx1 off, AnsB4 on). **Old code** (fix reverted for the run):
+  after the 73 the status went RFIN and the next Tx was `OK1JRD VU2CPL MK83`,
+  twice - #6 reproduced. **Fixed code**, same audio: status stays SREPORT and Tx
+  keeps `OK1JRD VU2CPL -08`. Not on air.
+- **Why Manoj's own setup never shows #6:** a 73/RR73 to another station only
+  reaches QsoHistory as `RFIN` when Settings "73/RR73 marker" (`73RR73Marker`,
+  default **on**) is ticked - `displaytext.cpp:480`; his profiles have it off, so
+  it arrives as `NONE`. To reproduce, also turn off Counters "answer in call"
+  (`SeqAnswerInCallCount`, it drops the DX as soon as it replies to another)
+  and use a station not in the log (or AnsB4 on).
 
 ### 2026-10-15 — No late Tx start after the first 20% of the period (for the next release)
 
@@ -3585,9 +3611,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **Issue #6 fix** (2026-10-15, checked only by `tools/qsoseq_test.cpp`):
-      try it in the app (fake TCI replaying a DX that calls, works another
-      station, sends 73), then reply on #6 once it's in a build.
+- [ ] **Issue #6 fix** (2026-10-15): unit test 5/5 and **passed in the app on
+      fake TCI** (old code reproduces #6, fixed code keeps the report). Reply on
+      #6 once it's in a build (rc5).
 - [x] **Update check in the real app** — TESTED by Manoj 2026-10-09 in the
       installed v0.7.3 ("mac expert, kst2mac, jtdx vu, mshv all tested").
       Was: (`e9796edb`, `0bd95894`, released in

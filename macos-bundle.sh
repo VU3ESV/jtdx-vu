@@ -58,6 +58,28 @@ while IFS= read -r f; do
   done
 done < <(find "$APP/Contents/MacOS" -type f)
 
+# bundled dylibs that name another one as @rpath/<lib> (resolved to Frameworks/):
+# copy any that are missing from Homebrew, until none are (2026-10-15: Homebrew
+# freetype 19:05 started linking libbrotlidec -> @rpath/libbrotlicommon and the
+# bundle died at launch, "Could not load the Qt platform plugin cocoa")
+while :; do
+  added=0
+  for f in "$FW"/*.dylib; do
+    for b in $(otool -L "$f" | tail -n +2 | awk '{print $1}' | sed -n 's#^@rpath/##p'); do
+      [ -f "$FW/$b" ] && continue
+      src="$(ls "$BREW"/lib/"$b" "$BREW"/opt/*/lib/"$b" 2>/dev/null | head -1)"
+      [ -n "$src" ] || { echo "no Homebrew copy of @rpath/$b (needed by $(basename "$f"))" >&2; exit 1; }
+      cp -L "$src" "$FW/"; chmod u+w "$FW/$b"; added=1
+    done
+  done
+  [ "$added" = 1 ] || break
+done
+
+# check: every @rpath dylib a bundled library names is present
+missing="$(for f in "$FW"/*.dylib; do otool -L "$f" | tail -n +2 | awk '{print $1}' | sed -n 's#^@rpath/##p'; done \
+           | sort -u | while read -r l; do [ -f "$FW/$l" ] || echo "$l"; done)"
+[ -z "$missing" ] || { echo "@rpath libraries missing from the bundle:" >&2; echo "$missing" >&2; exit 1; }
+
 # check: every @loader_path / @executable_path ../Frameworks dylib is present
 missing="$(find "$APP/Contents/MacOS" -type f | while IFS= read -r f; do
              file -b "$f" | grep -q Mach-O || continue
