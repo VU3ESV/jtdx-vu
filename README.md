@@ -275,6 +275,10 @@ or Pi 5 is recommended.
   only in the first fifth of the period (FT8 3 s, FT4 1.5 s, FT2 0.75 s, JT65 /
   JT9 12 s); after that Enable Tx stays on and Tx starts at your next period
   (KK4CDK). JTTY and WSPR are unchanged.
+- **Stays in the QSO when the DX works someone else first** (since the next
+  release). If a station calls you and gets your report, then finishes a QSO
+  with another station first, its 73 to them no longer makes AutoSeq start over
+  with your grid call; it keeps sending your report (issue #6, marinfyi).
 - **Rig mode shown** (since v0.7.0). The round rig-status light left of the
   frequency is now a box showing the mode the rig reports (DIGU, USB,
   LSB...), in the frequency's font: green when it is the mode set in

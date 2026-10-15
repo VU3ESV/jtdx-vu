@@ -482,7 +482,9 @@ void QsoHistory::message(QString const& callsign, Status status, int priority, Q
                   t.srx_p = t.srx_c;
                   t.srx_c = status;
   //                if (t.status <= SREPORT)
-                  if (t.status <= SCQ || t.status == SCALL || (t.status == SREPORT && t.srx_p < RREPORT) || 
+                  // JTDX-VU: a station that called us and got our report is still in QSO with us when it
+                  // sends 73 to someone else, so keep sending the report rather than calling it again (issue #6)
+                  if (t.status <= SCQ || t.status == SCALL || (t.status == SREPORT && t.srx_p < RREPORT && t.srx_p != RCALL) ||
                       (t.status == RCALL && t.time != time) ||
                       (t.status > SCQ && t.status < SRR73 && ((t.time > 300 && t.time - t.b_time > 300) || (t.time <= 300 && t.b_time - t.time < 86100)))) // an attempt to support CQ and any other message reception from MSHV multislot operation mode
                     {

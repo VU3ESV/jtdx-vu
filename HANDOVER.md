@@ -279,6 +279,23 @@ Last updated: 2026-10-15
 
 ## What changed
 
+### 2026-10-15 — AutoSeq keeps the report when the DX finishes with someone else (issue #6, for the next release)
+
+marinfyi (#6): OK1JRD answered their CQ and got -17, worked F4LQJ meanwhile, and
+on `F4LQJ OK1JRD 73` AutoSeq went back to `OK1JRD <mycall> <grid>`. Upstream
+JTDX (Arvo ES1JA, 2020): in `QsoHistory::message`, a 73/RR73 to another station
+(`RFIN`) resets a station to "free" when `t.status == SREPORT && t.srx_p <
+RREPORT` - we sent a report, none came back. The DX's messages to F4LQJ are
+`NONE` and don't touch `srx_c`, so `srx_p` was still `RCALL`. Now the reset
+skips `srx_p == RCALL` (`qsohistory.cpp:485`): a station that called us keeps
+getting the report. Unchanged: the Skip-Tx1 case (we answered its CQ with a
+report, `srx_p == RCQ`), a CQ from it, and the 5-min stale-QSO rule. Reply
+posted on #6 before the fix (cause + Skip Tx1 workaround, says a change is
+being looked at).
+- New `tools/qsoseq_test.cpp` (not built by CMake; build lines in its header):
+  5/5 pass with the fix, the #6 case fails on the old `qsohistory.cpp`. Full app
+  (`build/`) compiles and links. **Not yet tried in the running app or on air.**
+
 ### 2026-10-15 — No late Tx start after the first 20% of the period (for the next release)
 
 KK4CDK (Miguel): "sometimes I hit the ENABLE Tx and it triggers TX even though
@@ -3568,6 +3585,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
+- [ ] **Issue #6 fix** (2026-10-15, checked only by `tools/qsoseq_test.cpp`):
+      try it in the app (fake TCI replaying a DX that calls, works another
+      station, sends 73), then reply on #6 once it's in a build.
 - [x] **Update check in the real app** — TESTED by Manoj 2026-10-09 in the
       installed v0.7.3 ("mac expert, kst2mac, jtdx vu, mshv all tested").
       Was: (`e9796edb`, `0bd95894`, released in
