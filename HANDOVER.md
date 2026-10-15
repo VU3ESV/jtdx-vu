@@ -350,8 +350,9 @@ is not affected. Past the cutoff Enable Tx stays on and Tx starts at the next
 Tx period. The 20% also covers AutoSeq replies armed by a slow decode just
 after the period starts (up to 3 s in FT8). **Tested 2026-10-15** on the bundle
 (`build/bundle/JTDX-VU.app`, throwaway `-r latetest`, `tools/fake_tci.py`, FT8,
-Tx period 15/45): Enable Tx sent by UDP TriggerCQ at set offsets, PTT read from
-the fake rig's `trx:0,true` times. +1.0 s and +2.5 s keyed at once; +3.5, +6.0
+Tx period 15/45): Enable Tx sent by UDP TriggerCQ at set offsets (new
+`tools/tx_late_start_drive.py <udp port> <offsets...>`), PTT read from the fake
+rig's `trx:0,true` times. +1.0 s and +2.5 s keyed at once; +3.5, +6.0
 and +10.0 s did not key and keyed at the next Tx period start (+0.015 s). A
 first run on `build/jtdx.app` quit mid-test (no `jtdxjt9` - the known gotcha);
 its later cases were void.
