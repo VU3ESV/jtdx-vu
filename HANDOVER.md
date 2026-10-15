@@ -295,8 +295,8 @@ in the app** (fake TCI: enable Tx at ~1 s and ~6 s into the Tx period).
 
 Miguel also asked for a right-click on Halt Tx to "wait till available" (auto
 after 4 tries, resume when the DX is free) from "a previous version" - not in
-JTDX 2.2.159 (nearest: Settings > Counters, the call-after-73 modes). Reply
-drafted asking which program had it; not started.
+JTDX 2.2.159 (nearest: Settings > Counters, the call-after-73 modes).
+**Declined** (Manoj, 2026-10-15: not keen); dropped from the reply.
 
 ### 2026-10-15 — KK4CDK confirms: no blank rows in Band Activity on Windows
 
@@ -3634,8 +3634,6 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       **confirmed by Miguel's screenshot 2026-10-15** - no blank rows.
 - [ ] **Late Tx start cutoff (2026-10-15): try in the app** with fake TCI, then
       a Windows build for Miguel.
-- [ ] **KK4CDK "wait till available" on Halt Tx:** asked Miguel (2026-10-15)
-      which program had it; design after his answer. Manoj decides.
 - [ ] **Third/fourth VITA-49 copy on one radio** (KK4CDK): BUILT 2026-10-13
       (non-GUI `client bind` fallback, see entry); works on the fake radio;
       **to test on the 6600 with three copies**, then a Windows trial for
