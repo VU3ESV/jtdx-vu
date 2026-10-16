@@ -279,6 +279,43 @@ Last updated: 2026-10-15
 
 ## What changed
 
+### 2026-10-16 — 0.7.5-rc6: rc5 plus the queue picks and Halt and queue (test build)
+
+Manoj: "make rc6". `Versions.cmake` 0.7.5-rc6 (`d67a3352`), published as GitHub
+**pre-release `v0.7.5-rc6`**. rc6 = rc5 + a queued pick switching Enable Tx on
++ right-click Halt Tx > Halt and queue CALL (both KK4CDK). No Fortran changed
+since rc5, so no 132-column check.
+- **Windows CI broke on MSYS2:** `error: target not found:
+  mingw-w64-x86_64-libusb`, twice (so not a mirror hiccup). MSYS2 has dropped
+  libusb from the mingw64 package database (`mingw64.db` lists only
+  libusb-win32 / libusbmuxd; ucrt64 still has `ucrt-x86_64-libusb-1.0.30`).
+  The signed file `mingw-w64-x86_64-libusb-1.0.30-1-any.pkg.tar.zst` is still
+  on repo.msys2.org, so `windows.yml` now installs it with `pacman -U`
+  (`ac7804a9`). The tag was moved to `ac7804a9` (`git tag -f` + force push), and
+  the macOS run on the old tag was cancelled. Tag CI: Windows 38842511462 (20 min)
+  and macOS 38842511318, both green. **Known gotcha / open item:** once MSYS2
+  deletes that file the Windows build breaks again. The lasting fix is moving
+  the workflow to UCRT64 (`msystem: UCRT64`, `mingw-w64-ucrt-x86_64-*`
+  packages, `/ucrt64` prefix for Hamlib).
+- Windows zip: anonymous download sha256 OK, `jtdx.exe` says 0.7.5-rc6,
+  `libusb-1.0.dll` and `libhamlib-4.dll` bundled. It replaced the rc5 Windows
+  zip in `~/Desktop/jdxvu/test/`.
+- **macOS zips NOT notarised yet.** `macos-notarize.sh` failed: "No Keychain
+  password item found for profile: MSHV-NOTARY", and there is no notary item
+  in the login keychain at all (it worked for rc5 on 2026-10-15). Manoj needs
+  to run `xcrun notarytool store-credentials MSHV-NOTARY --apple-id ...
+  --team-id CHVNJ85C9F --password <app-specific>` himself, then
+  `./macos-notarize.sh` on the two CI zips and `gh release upload v0.7.5-rc6
+  ... --clobber --repo vu2cpl/jtdx-vu`. Until then the release has CI's
+  ad-hoc-signed Mac zips (checksums OK), and `~/Desktop/jdxvu/test/` still
+  holds the rc5 Mac zips.
+- `gh` in this checkout defaults to the **upstream** repo
+  (jtdx-project/jtdx), so pass `--repo vu2cpl/jtdx-vu` on every
+  `gh release` / `gh run` call.
+- The reply to Miguel (rc6 Windows link) is in
+  `~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-16.txt`, and Manoj
+  sends it.
+
 ### 2026-10-16 — Right-click Halt Tx: "Halt and queue CALL" (for the next release)
 
 Manoj: "add halt and queue to the right click". It covers most of Miguel's
