@@ -3897,6 +3897,22 @@ void MainWindow::queueSetupUi ()
   ui->verticalLayout_9->insertWidget (at, m_queueBox);
   for (auto * pane : {ui->decodedTextBrowser, ui->decodedTextBrowser2})
     connect (pane, &DisplayText::queueToggled, this, &MainWindow::queueToggle);
+  // right-click Halt Tx: stop calling a busy station and let the queue call it when it is free
+  ui->stopTxButton->setContextMenuPolicy (Qt::CustomContextMenu);
+  connect (ui->stopTxButton, &QWidget::customContextMenuRequested, this, [this] (QPoint const& pos) {
+      QMenu menu;
+      auto const call = m_hisCall;
+      auto * a = menu.addAction (call.isEmpty () ? tr ("Halt and queue (no DX call)") : tr ("Halt and queue %1").arg (call), this, [this, call] {
+          haltTx ("halted, " + call + " queued ");
+          clearDX (" cleared, " + call + " queued");
+          if (!m_queue.contains (call)) queueToggle (call);
+        });
+      a->setEnabled (!call.isEmpty () && m_mode != "JTTY");
+      a->setToolTip (tr ("Stop calling, clear the DX call and queue the station:\n"
+                         "AutoSeq calls it again when it sends CQ or RR73/73 to someone else."));
+      menu.setToolTipsVisible (true);
+      menu.exec (ui->stopTxButton->mapToGlobal (pos));
+    });
   queueChanged ();
 }
 

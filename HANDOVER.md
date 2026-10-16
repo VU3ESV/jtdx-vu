@@ -279,6 +279,31 @@ Last updated: 2026-10-15
 
 ## What changed
 
+### 2026-10-16 — Right-click Halt Tx: "Halt and queue CALL" (for the next release)
+
+Manoj: "add halt and queue to the right click". It covers most of Miguel's
+"wait till available" request (declined 2026-10-15) with the queue, and has
+no auto-after-N-tries. `queueSetupUi` gives `stopTxButton` a custom context
+menu with one item, "Halt and queue CALL" (disabled with no DX call, or in
+JTTY). It calls `haltTx("halted, CALL queued")`, then `clearDX`, then queues
+the call unless it's already in the queue. The queue entry above (Enable Tx
+on a queued pick) then calls the station when it sends CQ, or RR73/73 with
+the marker on. README queue item updated.
+- **Tested 2026-10-16** (bundle, throwaway `-r qtest` as above, with
+  `73RR73Marker=true` and the debug ALL.TXT on). `fake_tci.py` cycled
+  `F4LQJ OK1JRD RR73` plus 3 quiet periods (RR73 at :00 of every minute), and
+  this time the menu was right-clicked for real (full-screen computer use).
+  (1) DX call typed, Enable Tx off, Halt and queue: DX call cleared, queue
+  OK1JRD. The 02:41:00 RR73 was picked (RFIN, `queued=1 enableTx=0`), the Tx
+  period went 00/30 -> 15/45, and `OK1JRD VU2CPL -08` went out at 02:41:15.07.
+  (2) The realistic case: while calling OK1JRD, Halt and queue during Tx at
+  02:41:54 ("Halt Tx triggered at TX: halted, OK1JRD queued", "DX Call OK1JRD
+  cleared"). The 02:42:00 RR73 was picked and Tx started at 02:42:15.07.
+  An earlier run (before the debug log was on) picked OK1JRD but didn't key.
+  In that run the Tx period and Enable Tx had been set through accessibility
+  presses (`AXPress`), which may not emit Qt's `clicked()`, so the cause
+  isn't certain; the two clean runs above both worked. Not tried on air.
+
 ### 2026-10-16 — A queued pick switches Enable Tx on (for the next release)
 
 Manoj: "let queued pick turn on enable tx", after Miguel (KK4CDK) reported

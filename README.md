@@ -216,6 +216,11 @@ or Pi 5 is recommended.
   it was off (and moves your Tx period to the opposite one from where the
   station was heard), so the queue works while you are only listening.
   It still picks only between QSOs, with the DX Call box empty.
+  **Right-click Halt Tx > Halt and queue CALL** (since the next release)
+  does it in one go for a busy station: Tx stops, the DX call is cleared
+  and the station is queued, so AutoSeq calls it again when it sends CQ or
+  RR73/73 to someone else (the latter needs Settings > Notifications
+  "RR73/73" ticked).
 - **AutoSeq calls only stations decoded right now** (since v0.6.0). JTDX
   could go back to a station that called your CQ up to 5 minutes ago and
   isn't heard any more; now every AutoSeq pick must be in the latest
