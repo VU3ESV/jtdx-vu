@@ -312,6 +312,9 @@ since rc5, so no 132-column check.
 - `gh` in this checkout defaults to the **upstream** repo
   (jtdx-project/jtdx), so pass `--repo vu2cpl/jtdx-vu` on every
   `gh release` / `gh run` call.
+- Reply posted on #6 (2026-10-16): rc6 keeps the #6 fix, adds Halt and queue
+  and the queue switching Enable Tx on. marinfyi builds from source
+  ("will git pull and recompile"); no on-air report yet.
 - The reply to Miguel (rc6 Windows link) is in
   `~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-16.txt`, and Manoj
   sends it.
