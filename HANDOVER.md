@@ -279,6 +279,28 @@ Last updated: 2026-10-15
 
 ## What changed
 
+### 2026-10-16 — KK4CDK: Enable Tx OK on rc5; questions on busy stations and the queue
+
+Miguel: the rc5 late-start cutoff works ("working as it should be"). He asked
+three more things; a reply is drafted in
+`~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-16.txt`, and Manoj sends it.
+- **No Tx after the DX's RR73/73 to someone else.** This is stock behaviour.
+  JTDX halts Tx when the station being called answers another
+  (Settings > Sequencing "Halt TX if operator I called answered to other
+  operator", or always when our Tx is within the guard band of his
+  frequency, `mainwindow.cpp` ~4446), so Enable Tx is off by the time he's
+  free. Workarounds in the reply: untick that box and call off his frequency,
+  or the queue with "RR73/73" (Notifications, `73RR73Marker`) ticked.
+- **"Wait till available" on right-click Halt Tx.** He asked again. It stays
+  declined (2026-10-15), and the reply says so.
+- **Queue never called anyone.** The queue only reorders AutoSeq's autoselect
+  (`process_Auto`, runs only with the DX Call empty and call mode not None).
+  It doesn't switch Enable Tx on, and it only picks a queued station that sent
+  CQ, or RR73/73 with the marker on, in the current period. In practice it
+  works while you're running CQ. Probably Enable Tx was off, or a DX call was
+  still set. Possible future change, not asked for: let a queued pick switch
+  Enable Tx on.
+
 ### 2026-10-15 — KK4CDK: rc5 works on Windows, four Flex slices at once
 
 Manoj: "it worked at Miguel". Miguel's screenshot (1650 UTC): four JTDX-VU
