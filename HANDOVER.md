@@ -295,8 +295,10 @@ three more things; a reply is drafted in
   declined (2026-10-15), and the reply says so.
 - **Queue never called anyone.** The queue only reorders AutoSeq's autoselect
   (`process_Auto`, runs only with the DX Call empty and call mode not None).
-  It doesn't switch Enable Tx on, and it only picks a queued station that sent
-  CQ, or RR73/73 with the marker on, in the current period. In practice it
+  It doesn't switch Enable Tx on. It picks a queued station heard in the
+  current period: one calling us, answered ahead of all other callers
+  (score 100000+, `qsohistory.cpp:180`), or one sending CQ, or RR73/73 with
+  the marker on. In practice it
   works while you're running CQ. Probably Enable Tx was off, or a DX call was
   still set. Possible future change, not asked for: let a queued pick switch
   Enable Tx on.
