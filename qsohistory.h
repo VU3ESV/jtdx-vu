@@ -24,6 +24,7 @@ class QsoHistory
 	void message(QString const& callsign, Status status, int priority, QString const& param, QString const& tyyp, QString const& continent, QString const& mpx, unsigned time, QString const& rep, int freq,  QString const& mode, int wanted = -1);
 	void rx(QString const& callsign, int freq);
 	void time(unsigned time);
+	unsigned lastTime () const {return max_r_time;}   // JTDX-VU: time of the latest decode period, s of day
 	void owndata (QString const& mycontinent, QString const& myprefix, QString const& mygrid, bool strictdirCQ);
 	Status status(QString const& callsign, QString &grid);
 	Status autoseq(QString &callsign, QString &grid, QString &rep, int &rx, int &tx, unsigned &time, int &count, int &prio, QString &mode);

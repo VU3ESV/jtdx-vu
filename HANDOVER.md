@@ -279,6 +279,35 @@ Last updated: 2026-10-15
 
 ## What changed
 
+### 2026-10-16 — A queued pick switches Enable Tx on (for the next release)
+
+Manoj: "let queued pick turn on enable tx", after Miguel (KK4CDK) reported
+that the queue never called anyone. The queue only re-ranks AutoSeq's
+autoselect, and autoselect never keyed up by itself. In `process_Auto`, when
+the station picked is `queued()` and Enable Tx is off (not JTTY), it now
+sets the Tx period opposite the decode first and then clicks Enable Tx, with
+a 15 s status message "CALL (queued) heard: Enable Tx switched on". The Tx
+period matters because with Tx off both periods are received. The period
+comes from the new `QsoHistory::lastTime()` (= `max_r_time`, the time of the
+decode the pick came from): `m_txFirst = fmod(t, 2*TR) != 0`, the same rule
+as `processMessage`. With Enable Tx off, `on_TxMinuteButton_clicked` doesn't
+clear the DX call. The tooltip on the queue list and the README queue item
+say so. Unchanged: picks still need the DX Call box empty, a call mode other
+than None and AutoSeq on, so a station the user was calling when Tx halted
+(DX Call still set) isn't picked up from the queue.
+- **Tested 2026-10-16** on the bundle with a throwaway `-r qtest` copy of
+  the TCI FLEX HF profile (`CATTCIPort` and UDP on localhost, PSK Reporter
+  and SWL off, TxFirst=true). `tools/fake_tci.py` cycled `FAKE_TCI_WAVS`
+  `CQ OK1JRD JN79` (ft8sim, -8 dB) plus 3 quiet periods, so OK1JRD CQ'd at
+  :00 of every minute. A first OK1JRD decode left the DX Call box empty, so
+  stock autoselect doesn't pick up a CQ with Enable Tx off. The right-click
+  needed full-screen control, which wasn't granted, so the queue was seeded
+  through a temporary env-var hook in a local build (removed, never
+  committed). Result: the 02:20:00 CQ decoded, Tx period went 00/30 ->
+  15/45, Enable Tx on, `OK1JRD VU2CPL -08` (Skip Tx1 on) keyed at
+  02:20:15.06 (fake rig `trx:0,true`). Not tried on air, and the right-click
+  path itself wasn't exercised here (that code didn't change).
+
 ### 2026-10-16 — KK4CDK: Enable Tx OK on rc5; questions on busy stations and the queue
 
 Miguel: the rc5 late-start cutoff works ("working as it should be"). He asked
@@ -300,8 +329,7 @@ three more things; a reply is drafted in
   (score 100000+, `qsohistory.cpp:180`), or one sending CQ, or RR73/73 with
   the marker on. In practice it
   works while you're running CQ. Probably Enable Tx was off, or a DX call was
-  still set. Possible future change, not asked for: let a queued pick switch
-  Enable Tx on.
+  still set. A queued pick now switches Enable Tx on (next entry up).
 
 ### 2026-10-15 — KK4CDK: rc5 works on Windows, four Flex slices at once
 

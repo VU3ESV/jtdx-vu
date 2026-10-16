@@ -3876,7 +3876,8 @@ void MainWindow::queueSetupUi ()
   m_queueList = new QListWidget;
   m_queueList->setMaximumHeight (fontMetrics ().height () * 4 + 6);
   m_queueList->setToolTip (tr ("Right-click a decode to queue or unqueue a station.\n"
-                               "AutoSeq calls the first queued station that is decoded, before anyone else.\n"
+                               "AutoSeq calls the first queued station that is decoded, before anyone else,\n"
+                               "and switches Enable Tx on if it is off.\n"
                                "Right-click here to remove a call or clear the queue."));
   m_queueList->setContextMenuPolicy (Qt::CustomContextMenu);
   box->addWidget (m_queueList);
@@ -4058,6 +4059,14 @@ void MainWindow::process_Auto()
       // JTDX-VU: a caller answering our CQ, not a CQ we picked up
       // (a queued station counts as our own run, so CNS carries on after it)
       m_cqRunQso = (m_status != QsoHistory::RCQ && m_status != QsoHistory::SCQ && m_status != QsoHistory::SCALL) || queued (hisCall);
+      // JTDX-VU: a queued pick switches Enable Tx on. With Tx off both periods are
+      // received, so first put our Tx period opposite the one it was heard in
+      if (queued (hisCall) && !m_enableTx && m_mode != "JTTY") {
+        bool const first = fmod (double (m_qsoHistory.lastTime ()), 2.0 * m_TRperiod) != 0;
+        if (m_txFirst != first) ui->TxMinuteButton->click ();
+        ui->enableTxButton->click ();
+        showStatusMessage (tr ("%1 (queued) heard: Enable Tx switched on").arg (hisCall), 15000);
+      }
       if(m_mode=="JT9+JT65" && m_modeTx != mode) {
       m_modeTx = mode;
       if (m_modeTx == "JT9") ui->pbTxMode->setText("Tx JT9  @");

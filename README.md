@@ -212,6 +212,10 @@ or Pi 5 is recommended.
   queue shows above the Rx Frequency pane while it has calls; right-click
   there (or the decode again) to remove one, or clear it. A queued QSO
   counts as your own run, so CNS carries on afterwards. FT modes only.
+  Since the next release a queued pick also switches **Enable Tx** on if
+  it was off (and moves your Tx period to the opposite one from where the
+  station was heard), so the queue works while you are only listening.
+  It still picks only between QSOs, with the DX Call box empty.
 - **AutoSeq calls only stations decoded right now** (since v0.6.0). JTDX
   could go back to a station that called your CQ up to 5 minutes ago and
   isn't heard any more; now every AutoSeq pick must be in the latest
