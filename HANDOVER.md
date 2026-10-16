@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-15
+Last updated: 2026-10-16
 
 ## Current state
 
@@ -13,7 +13,7 @@ Last updated: 2026-10-15
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.5-rc5** (last release 0.7.4) (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.5-rc6** (pre-release 2026-10-16; last release 0.7.4) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -316,8 +316,9 @@ since rc5, so no 132-column check.
   and the queue switching Enable Tx on. marinfyi builds from source
   ("will git pull and recompile"); no on-air report yet.
 - The reply to Miguel (rc6 Windows link) is in
-  `~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-16.txt`, and Manoj
-  sends it.
+  `~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-16.txt`. Manoj sent
+  it on 2026-10-16. **Waiting on Miguel** to try Halt and queue and the queue
+  on his Flex.
 
 ### 2026-10-16 — Right-click Halt Tx: "Halt and queue CALL" (for the next release)
 
