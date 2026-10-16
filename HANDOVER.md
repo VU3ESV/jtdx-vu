@@ -300,15 +300,15 @@ since rc5, so no 132-column check.
 - Windows zip: anonymous download sha256 OK, `jtdx.exe` says 0.7.5-rc6,
   `libusb-1.0.dll` and `libhamlib-4.dll` bundled. It replaced the rc5 Windows
   zip in `~/Desktop/jdxvu/test/`.
-- **macOS zips NOT notarised yet.** `macos-notarize.sh` failed: "No Keychain
-  password item found for profile: MSHV-NOTARY", and there is no notary item
-  in the login keychain at all (it worked for rc5 on 2026-10-15). Manoj needs
-  to run `xcrun notarytool store-credentials MSHV-NOTARY --apple-id ...
-  --team-id CHVNJ85C9F --password <app-specific>` himself, then
-  `./macos-notarize.sh` on the two CI zips and `gh release upload v0.7.5-rc6
-  ... --clobber --repo vu2cpl/jtdx-vu`. Until then the release has CI's
-  ad-hoc-signed Mac zips (checksums OK), and `~/Desktop/jdxvu/test/` still
-  holds the rc5 Mac zips.
+- **macOS zips notarised** after a delay. The first `macos-notarize.sh` run
+  failed with "No Keychain password item found for profile: MSHV-NOTARY": the
+  credential had gone from the login keychain (it worked for rc5 on
+  2026-10-15). Manoj re-ran `notarytool store-credentials MSHV-NOTARY`, and
+  both zips were then Accepted (arm64 e0e2eef4-a419-4177-9bb0-c50dbbf18abb,
+  x86_64 c0b50933-d5fd-4294-afa6-74988fa169c3), stapled and replaced on the
+  release (`--clobber`). Anonymous downloads: checksums OK, `spctl`
+  "Notarized Developer ID", ticket validates, 0.7.5-rc6, right arch. All three
+  rc6 zips are now in `~/Desktop/jdxvu/test/`, and the rc5 ones were trashed.
 - `gh` in this checkout defaults to the **upstream** repo
   (jtdx-project/jtdx), so pass `--repo vu2cpl/jtdx-vu` on every
   `gh release` / `gh run` call.
