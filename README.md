@@ -1,4 +1,4 @@
-# JTDX-VU for VUCG community — v0.7.4
+# JTDX-VU for VUCG community — v0.7.5
 
 VU2CPL's build of JTDX 2.2.159 for the VUCG community: macOS (Apple
 Silicon and Intel), Windows x64 and Raspberry Pi / Linux arm64. It runs
@@ -43,11 +43,10 @@ stock JTDX on macOS and Windows; on the Pi the package replaces a stock
 1. Download the zip for your Mac (Apple menu > About This Mac: "Apple
    M…" chip = arm64, "Intel" = x86_64) and double-click it to unzip.
 2. Drag **JTDX-VU** into **Applications**.
-3. **First launch.** From the next release the app is signed with a
-   Developer ID and notarized by Apple, so it opens with only the usual
-   "downloaded from the internet" question. Releases up to v0.7.4 and the
-   0.7.5 test builds are ad-hoc signed, not notarized, and macOS blocks
-   their first open:
+3. **First launch.** From v0.7.5 the app is signed with a Developer ID
+   and notarized by Apple, so it opens with only the usual "downloaded
+   from the internet" question. Releases up to v0.7.4 are ad-hoc signed,
+   not notarized, and macOS blocks their first open:
    - macOS 15 Sequoia and later: double-click JTDX-VU, click **Done** on
      the warning, then open **System Settings > Privacy & Security**,
      scroll down and click **Open Anyway** next to "JTDX-VU was
@@ -147,7 +146,7 @@ or Pi 5 is recommended.
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
   Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
-  VUCG V0.7.4"; the JTDX / WSJT-X base and credits are in Help >
+  VUCG V0.7.5"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
   `~/Library/Application Support/JTDX-VU`.
@@ -212,11 +211,11 @@ or Pi 5 is recommended.
   queue shows above the Rx Frequency pane while it has calls; right-click
   there (or the decode again) to remove one, or clear it. A queued QSO
   counts as your own run, so CNS carries on afterwards. FT modes only.
-  Since the next release a queued pick also switches **Enable Tx** on if
+  Since v0.7.5 a queued pick also switches **Enable Tx** on if
   it was off (and moves your Tx period to the opposite one from where the
   station was heard), so the queue works while you are only listening.
   It still picks only between QSOs, with the DX Call box empty.
-  **Right-click Halt Tx > Halt and queue CALL** (since the next release)
+  **Right-click Halt Tx > Halt and queue CALL** (since v0.7.5)
   does it in one go for a busy station: Tx stops, the DX call is cleared
   and the station is queued, so AutoSeq calls it again when it sends CQ or
   RR73/73 to someone else (the latter needs Settings > Notifications
@@ -268,17 +267,17 @@ or Pi 5 is recommended.
   or rig restart arriving while the TCI link was still connecting could
   crash JTDX-VU (same fault as the quit crash fixed in v0.4.0, now closed for every
   path).
-- **Settings boxes ignore a passing scroll** (since the next release). A drop-down or
+- **Settings boxes ignore a passing scroll** (since v0.7.5). A drop-down or
   number box in Settings reacts to the mouse wheel only after you click it, so
   scrolling down the page can't change the rig, a port or a device by accident.
-- **Bypass button back** (since the next release): the Auto CQ button had been
+- **Bypass button back** (since v0.7.5): the Auto CQ button had been
   drawn over the Bypass button below it, so Bypass looked missing (iw1gb).
-- **Safer double-click on a decode** (since the next release). Double-clicking a
+- **Safer double-click on a decode** (since v0.7.5). Double-clicking a
   separator line, a free-text line under AutoSeq, or a `<your-call> 73` / `RR73`
   line that names no sender no longer flips the Tx period, clears the DX call or
   arms an empty message, and `RR73` is never taken as a callsign. Contributed by
   Vinod VU3ESV.
-- **No cut-off late transmission** (since the next release). Enable Tx (or an
+- **No cut-off late transmission** (since v0.7.5). Enable Tx (or an
   AutoSeq reply) late in your Tx period no longer keys up and sends only the tail
   of the message, which the other station can't decode. A late start is allowed
   only in the first fifth of the period (FT8 3 s, FT4 1.5 s, FT2 0.75 s, JT65 /
@@ -306,7 +305,7 @@ or Pi 5 is recommended.
   newer `us_call_states.txt` in the log directory overrides the built-in one.
   Asked for by KK4CDK (Miguel), after the option in JTDX 2.2.160.
   Canadian stations get their province or territory the same way
-  (`Canada:ON`, since the next release; the box now reads *Show US State / VE
+  (`Canada:ON`, since v0.7.5; the box now reads *Show US State / VE
   province*): from the grid first (`Canada:QC-ON` for FN25), from Natural Earth's
   public-domain boundaries (`tools/build_ca_grid_provinces.py`), else from the
   callsign's prefix - VE/VA 1-9 (VE3 = ON), VO1/VO2 = NL, VY0 = NU, VY1 = YT,
@@ -327,7 +326,7 @@ or Pi 5 is recommended.
   why (usually the firewall), and clicking the red ERR box reconnects. Audio
   that was flowing and then stops (a VPN or network drop) is not a firewall:
   it keeps retrying until the link is back, and goes back to the frequency
-  you were on (both since the next release). One
+  you were on (both since v0.7.5). One
   API session, so the radio's relays click once per over. Ported from the
   MSHV-Mac backend. No split: use Fake It or None. The TX slider is the
   radio's RF power (it follows the radio, which keeps power per band; while
@@ -338,7 +337,7 @@ or Pi 5 is recommended.
   connection puts the slice back on your last frequency in your data mode. To go to a
   frequency that is not in your list (a DXpedition on 28.088, say) type it over the band
   name in the main window's band box and press Enter; the radio follows.
-  **Several copies on one radio** (since the next release): run one JTDX-VU
+  **Several copies on one radio** (since v0.7.5): run one JTDX-VU
   profile per slice, each set to its own slice letter (*Slice A*, *Slice B*...).
   A Flex lets only two programs be GUI clients at a time (multiFLEX; the
   6700 answers a third with `client gui refused (0xf3000001)`), so the third
@@ -367,7 +366,7 @@ or Pi 5 is recommended.
   If the SDR program's opening message leaves out your receiver's frequency
   (AetherSDR can, when its slice sits on the other TCI receiver), JTDX-VU asks
   for it instead of reconnecting every 5 s with "TCI sent an unrecognized
-  frequency" (since the next release).
+  frequency" (since v0.7.5).
 - **Call Non-Stop:** the **Auto CQ** button in the right-hand button
   column, directly under Monitor in every mode (since v0.5.3), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
   or the next caller instead of halting Tx. Only QSOs from your own CQ
