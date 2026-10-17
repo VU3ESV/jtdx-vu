@@ -279,6 +279,22 @@ Last updated: 2026-10-17
 
 ## What changed
 
+### 2026-10-17 — KK4CDK: four Flex copies, only two get TX audio (Flex limitation, no change)
+
+Miguel ran four JTDX-VU copies on his FLEX-6700: all decode, any one
+transmits alone, two transmit independently, but the third and fourth to
+connect key PTT with no TX audio. Cause: the radio takes two GUI clients
+(stations), and DAX TX is one stream per station. Copies 3 and 4 join a
+station (the 2026-10-13 join) and their `stream create type=dax_tx` gets no
+usable stream, which `tx_audio()` skips without a warning. `tools/fake_flex.py`
+gives every client its own TX stream, so the fake didn't show it. **Manoj:
+treat it as a Flex limitation, no change for now.** Ideas left for later:
+send on the station's existing dax_tx stream id when our own create fails
+(untested on a real radio), or at least a status-bar warning. Reply (use
+copies 1-2 for Tx, 3-4 for receive; plus re-answers on RR73/73, Halt and
+queue and the queue, pointing at v0.7.5) drafted in
+`~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-17.txt`; Manoj sends it.
+
 ### 2026-10-17 — v0.7.5 released: Intel crash fix, notarised Mac apps, late Tx cutoff, queue + Halt and queue, four Flex copies
 
 - https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.5, annotated tag on
