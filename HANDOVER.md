@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-16
+Last updated: 2026-10-17
 
 ## Current state
 
@@ -13,7 +13,7 @@ Last updated: 2026-10-16
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.5-rc6** (pre-release 2026-10-16; last release 0.7.4) (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.5** (released 2026-10-17) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -278,6 +278,48 @@ Last updated: 2026-10-16
   `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-10-17 — v0.7.5 released: Intel crash fix, notarised Mac apps, late Tx cutoff, queue + Halt and queue, four Flex copies
+
+- https://github.com/vu2cpl/jtdx-vu/releases/tag/v0.7.5, annotated tag on
+  `eb43fff1` ("Version 0.7.5": `Versions.cmake` 0.7.5-rc6 -> 0.7.5; README
+  title, title-bar example, first-launch text (notarised from v0.7.5), and
+  every "since the next release" -> "since v0.7.5"). Cut on Manoj's "release
+  0.7.5". No Fortran changed since v0.7.4. Contents = rc1-rc6 (68 commits
+  since v0.7.4); notes from the v0.7.4 template with the macOS first-launch
+  step rewritten for notarised apps.
+- **Created as a draft** so v0.7.4 users' update check didn't see a release
+  with no files; CI's `gh release view` found the draft and attached to it
+  (no duplicate). Published (`--latest`) only after all eight files were in.
+  CI: Windows 38982097543 and macOS 38982097544, both green (the MSYS2
+  libusb `pacman -U` fix from rc6 held).
+- Pi .deb on meridianpi5 (rsync of `git ls-files` at `eb43fff1`, `cmake ..`,
+  `nice make -j3`, `cpack -G DEB`): jtdx-vu 0.7.5 arm64, Conflicts: jtdx,
+  `apt-get install -s` clean, 8 s offscreen `--test-mode` start OK (no
+  jtdxjt9 left; its 13.7 MB shm segment, `~/.qttest`, `/tmp/JTDX-VU - test*`
+  removed), uploaded by hand with its `.sha256`.
+- Mac zips notarised (arm64 59a47317-2356-4c9e-951d-06a353874f5f, x86_64
+  959bef4e-24bb-44d5-9714-6eaf90306b0b, Accepted, stapled) and replaced on
+  the draft. After publishing, all eight files downloaded anonymously,
+  checksums OK; both Mac apps "Notarized Developer ID", 0.7.5, right arch, no
+  AppleDouble entries; Windows `jtdx.exe` 0.7.5 with libusb + Hamlib DLLs;
+  `releases/latest` = v0.7.5. sha256:
+  - `JTDX-VU-0.7.5-macos-arm64.zip` `16562d8836cea5470c99f9c18d27a8a4434b8323b4de9635e3ec33817636ed62`
+  - `JTDX-VU-0.7.5-macos-x86_64.zip` `bb12e766679f27fa4bda0c08abd36b4702026da07c7b314dcc9b2356108db101`
+  - `JTDX-VU-0.7.5-windows-x64.zip` `a322e9a5d4d0448bf272cc6e2c47e6311a93204c69a2380e80cdb87d5a8ed6d9`
+  - `jtdx-vu-0.7.5-linux-arm64.deb` `775035f7aedb69df71d243895ea80b8a1b43f9ea4912e7b82f9631249ed5379d`
+- Issues #1, #4, #5, #6 commented ("Fixed in v0.7.5 ... reopen if it comes
+  back") and closed on Manoj's "post and close them". No open issues left.
+- Website (vu2cpl.github.io `75f845c`): card sentence, page paragraph
+  "Intel crash fixed, notarised Mac apps, a queue that calls by itself and
+  four copies on one Flex (v0.7.5)", Queue bullet, downloads / release link /
+  apt on v0.7.5, Installing says notarised, Tested-so-far adds KK4CDK's four
+  slices. All URLs answered 206 first.
+- **Mac mini install pending:** JTDX-VU was running (FLEX VITA49 profile)
+  when the release was ready, so it wasn't touched; `/Applications` still
+  has 0.7.5-rc4. Install the arm64 release zip once Manoj quits it.
+- `~/Desktop/jdxvu/` (rc6 test zips) moved to the Trash on Manoj's word.
+- v0.7.4 users get the in-app update notice for this release.
 
 ### 2026-10-16 — 0.7.5-rc6: rc5 plus the queue picks and Halt and queue (test build)
 
@@ -3759,8 +3801,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 - [ ] **Issue #6 fix** (2026-10-15): unit test 5/5 and **passed in the app on
       fake TCI** (old code reproduces #6, fixed code keeps the report). Reply on
-      #6 posted 2026-10-15 pointing to the rc5 pre-release; waiting on
-      marinfyi to try it on air. Close #6 when 0.7.5 is released.
+      #6 posted 2026-10-15 pointing to the rc5 pre-release. Released in
+      v0.7.5 and #6 closed 2026-10-17; marinfyi has not yet confirmed on air.
 - [x] **Update check in the real app** — TESTED by Manoj 2026-10-09 in the
       installed v0.7.3 ("mac expert, kst2mac, jtdx vu, mshv all tested").
       Was: (`e9796edb`, `0bd95894`, released in
@@ -3812,9 +3854,8 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       greyed out for this rig; pick CAT.) (Asked about
       rimuadmin/ProtoFlex, a closed-source Windows-only Flex emulator for
       TeensyMaestro with discovery but no DAX audio: not used.)
-- [ ] **Intel start-up crash fix: RELEASE it** - verified 20/20 under Rosetta
-      (2026-10-13); Intel users crash every other start on 0.7.3 / 0.7.4
-      until then. Manoj calls the release.
+- [x] **Intel start-up crash fix: RELEASED in v0.7.5** (2026-10-17; #5 closed).
+      Was: verified 20/20 under Rosetta (2026-10-13).
 - [ ] **ON HOLD (Manoj, 2026-10-14): a priority list and a blacklist like MSHV.**
       Not started beyond a first look. Starting points: the right-click queue
       (`QsoHistory::setQueue`, score 100000+) is the nearest thing to a manual
