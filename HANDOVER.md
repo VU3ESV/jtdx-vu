@@ -315,9 +315,11 @@ Last updated: 2026-10-17
   four copies on one Flex (v0.7.5)", Queue bullet, downloads / release link /
   apt on v0.7.5, Installing says notarised, Tested-so-far adds KK4CDK's four
   slices. All URLs answered 206 first.
-- **Mac mini install pending:** JTDX-VU was running (FLEX VITA49 profile)
-  when the release was ready, so it wasn't touched; `/Applications` still
-  has 0.7.5-rc4. Install the arm64 release zip once Manoj quits it.
+- **Installed on the Mac mini** on Manoj's "quit it, install now": JTDX-VU
+  (FLEX VITA49 profile) quit cleanly via AppleScript, the 0.7.5-rc4 app went
+  to the Trash, and the arm64 release app went in with `ditto`. It reports
+  0.7.5, shows as "Notarized Developer ID", `codesign --verify --deep --strict`
+  is OK, the binary is identical to the release, and no shared memory was left.
 - `~/Desktop/jdxvu/` (rc6 test zips) moved to the Trash on Manoj's word.
 - v0.7.4 users get the in-app update notice for this release.
 
