@@ -293,7 +293,7 @@ send on the station's existing dax_tx stream id when our own create fails
 (untested on a real radio), or at least a status-bar warning. Reply (use
 copies 1-2 for Tx, 3-4 for receive; plus re-answers on RR73/73, Halt and
 queue and the queue, pointing at v0.7.5) drafted in
-`~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-17.txt`; Manoj sends it.
+`~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-17.txt`; Manoj trimmed point 1 (no technical detail) and sent it 2026-10-17.
 
 ### 2026-10-17 — v0.7.5 released: Intel crash fix, notarised Mac apps, late Tx cutoff, queue + Halt and queue, four Flex copies
 
