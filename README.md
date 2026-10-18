@@ -145,7 +145,9 @@ or Pi 5 is recommended.
   Hamlib 4.7 and gfortran 16. `macos-bundle.sh` produces an app that
   does not depend on Homebrew at run time.
 - **Its own identity.** The app, window titles, dialogs and PSK
-  Reporter ID all say JTDX-VU. The title bar reads just "JTDX-VU for
+  Reporter ID all say JTDX-VU. PSK Reporter gets just "JTDX-VU v0.7.6"
+  (no rig name, rc suffix or build id), so every copy is counted as
+  one program. The title bar reads just "JTDX-VU for
   VUCG V0.7.5"; the JTDX / WSJT-X base and credits are in Help >
   About. Settings are in
   `~/Library/Preferences/JTDX-VU.ini` and data in
