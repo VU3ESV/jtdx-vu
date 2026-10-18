@@ -288,7 +288,23 @@ Fortran changed since rc1. Local macOS build clean. Checked with a scratch
 CountryDat harness: the new bundled CSV (newest 2026-10-12) gives W1AW
 2026-10-07 and UT7QF 2026-10-05; the old 2022 CSV gives nobody (Miguel's "no
 dots"). Fetch Now itself not yet clicked in the app. GitHub pre-release
-`v0.7.6-rc3`.
+`v0.7.6-rc3` (tag CI green, 6 files; notes corrected: Flex copies 3-4 still
+silent on a real radio).
+- **Installed on the Mac mini** 2026-10-19 ~01:38 from the arm64 zip (sha256
+  OK, `ditto`, reports 0.7.6-rc3, `codesign --verify --deep --strict` OK,
+  binary identical to the zip). Ad-hoc signed, not notarised (rc builds aren't;
+  only releases go through `macos-notarize.sh`). The 0.7.5 release app is in
+  the Trash. Started with `open --stderr ~/Desktop/jtdx-stderr.log -a
+  /Applications/JTDX-VU.app --args -r "Aether QO-100"` so a Fortran runtime
+  error (the exit-code-2 quits of 2026-10-18, 18:10:51 and 18:12:36 UTC, both
+  a few s after a queued station OZ1TDK sent CQ) is captured. rc1 zips in
+  `~/Desktop/jdxvu/test` moved to the Trash.
+- **KK4CDK, 2026-10-19:** rc1 still gives TX audio on only 2 of 4 copies on
+  his FLEX-6700, and the LoTW dot never shows (only `*`, the hinted-decode
+  mark). Reply sent asking for copy 3's `flex_trace.txt` and its Flex panel
+  status line, plus the manual LoTW CSV workaround. **Waiting on Miguel's
+  trace.** An rc3 follow-up draft is in
+  `~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-19.txt` (not sent).
 
 ### 2026-10-19 — LoTW user marks: Settings > General "Logbook of the World User Validation" (branch `claude/lotw-fetch-d0bae6`, for the next rc)
 
