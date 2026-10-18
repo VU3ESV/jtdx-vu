@@ -73,6 +73,7 @@
 #include "HelpTextWindow.hpp"
 #include "SampleDownloader.hpp"
 #include "Audio/BWFFile.hpp"
+#include "flexshared.h"
 
 #include "ui_mainwindow.h"
 #include "moc_mainwindow.cpp"
@@ -7865,6 +7866,17 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
       QSignalBlocker block {ui->outAttenuation};
       ui->outAttenuation->setValue (a);
     }
+  }
+  // JTDX-VU: a Flex copy with DAX audio but no TX stream (a station's one
+  // stream gone, KK4CDK) keys the radio with no audio - say so when it is
+  // found, and again at every key-up
+  if (s.online () && m_config.rig_name ().startsWith ("FlexRadio VITA")) {
+    auto const fs = FlexShared::instance ().snapshot ();
+    bool const missing = fs.up && fs.tx_missing;
+    if (missing && (!m_flexTxWarned || (s.ptt () && !m_flexTxWarnPtt)))
+      showStatusMessage (tr ("FlexRadio: no DAX TX stream for this copy - PTT keys the radio with no audio"), 30000);
+    m_flexTxWarned = missing;
+    m_flexTxWarnPtt = s.ptt ();
   }
   // qDebug () << "MainWindow::handle_transceiver_update:" << s;
   Transceiver::TransceiverState old_state {m_rigState};

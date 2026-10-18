@@ -18,6 +18,7 @@ struct FlexStatus
   int slice {-1};
   int dax_channel {0};
   bool tx {false};                 // DAX TX stream up: JTDX-VU owns the transmitter
+  bool tx_missing {false};         // DAX audio on but no TX stream: PTT keys with no audio
   qint64 frequency {0};            // Hz, the slice's
   QString rxant, txant, mode;
   QStringList ant_list, tx_ant_list, mode_list;

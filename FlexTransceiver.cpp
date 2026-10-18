@@ -338,6 +338,70 @@ void FlexTransceiver::handle_line (QString const& line)
       auto const m = st.match (line);
       if (m.hasMatch () && !tx_stream_) tx_stream_ = m.captured (1).toUInt (nullptr, 16);
     }
+  // every client's station and dax_tx stream, for a copy that joined a station
+  // and has to send on the station's one TX stream
+  QRegularExpression const con {"\\|client 0x([0-9A-Fa-f]+) connected .*\\bstation=(\\S+)"};
+  QRegularExpression const dis {"\\|client 0x([0-9A-Fa-f]+) disconnected"};
+  auto const cm = con.match (line);
+  if (cm.hasMatch ()) client_station_[cm.captured (1).toUInt (nullptr, 16)] = cm.captured (2);
+  auto const dm = dis.match (line);
+  if (dm.hasMatch ()) client_station_.remove (dm.captured (1).toUInt (nullptr, 16));
+  auto const sm = st.match (line);
+  if (!sm.hasMatch ()) return;
+  quint32 const sid = sm.captured (1).toUInt (nullptr, 16);
+  auto const low = line.toLower ();
+  if (low.contains (" removed") || low.contains ("in_use=0"))
+    {
+      dax_tx_streams_.remove (sid);
+      if (tx_borrowed_ && sid == tx_stream_)
+        {
+          tx_audio (false);
+          tx_stream_ = station_tx_stream ();
+          trace (QString ("!! the station's DAX TX stream 0x%1 was removed - now 0x%2").arg (sid, 0, 16).arg (tx_stream_, 0, 16));
+          if (tx_stream_) use_tx_stream ();
+          else tx_borrowed_ = tx_dax_ = false;
+          publish_status ();
+        }
+      return;
+    }
+  if (!low.contains ("type=dax_tx")) return;
+  QRegularExpression const ch {"\\bclient_handle=0x([0-9a-f]+)"};
+  auto const hm = ch.match (low);
+  dax_tx_streams_[sid] = hm.hasMatch () ? hm.captured (1).toUInt (nullptr, 16) : 0;
+  // a copy that started with no TX stream picks up one its station brings
+  // up later (the station's GUI client reconnecting)
+  if (ready_ && tci_audio_ && bound_handle_ && !tx_stream_ && (tx_stream_ = station_tx_stream ()))
+    {
+      tx_borrowed_ = true;
+      trace (QString ("sending on the station's DAX TX stream 0x%1, now up").arg (tx_stream_, 0, 16));
+      use_tx_stream ();
+      publish_status ();
+    }
+}
+
+// The station we joined: its GUI client's dax_tx stream, else one of a client
+// on the same station (SmartSDR's DAX program). Never another station's - that
+// would put our audio on its transmitter.
+quint32 FlexTransceiver::station_tx_stream () const
+{
+  if (!bound_handle_) return 0;
+  QString const station = client_station_.value (bound_handle_);
+  bool const named = !station.isEmpty () && station.toLower () != "none";
+  quint32 found = 0;
+  for (auto it = dax_tx_streams_.cbegin (); it != dax_tx_streams_.cend (); ++it)
+    {
+      if (it.value () == handle_) continue;
+      if (it.value () == bound_handle_) return it.key ();
+      if (!found && named && client_station_.value (it.value ()) == station) found = it.key ();
+    }
+  return found;
+}
+
+void FlexTransceiver::use_tx_stream ()
+{
+  send ("transmit set dax=1");
+  send (QString ("dax audio set %1 slice=%2 tx=1").arg (dax_ch_).arg (slice_));
+  tx_dax_ = true;
 }
 
 void FlexTransceiver::parse_slice_line (int, QString const& line)
@@ -551,6 +615,7 @@ bool FlexTransceiver::start_session ()
   send ("sub radio all");
   send ("sub meter all");          // the panel's meters and the main window's S / PWR / SWR
   send ("sub atu all");            // read-only; a radio without a tuner never reports
+  send ("sub dax all");            // the DAX streams, the station's dax_tx among them
   if (!audio_)
     {
       audio_ = new QUdpSocket {this};
@@ -641,12 +706,19 @@ bool FlexTransceiver::start_session ()
           t.restart ();
           while (!tx_stream_ && connected_ && t.elapsed () < 3000) wait_ms (50);
         }
-      if (tx_stream_)
+      if (!tx_stream_ && bound_handle_)
         {
-          send ("transmit set dax=1");
-          send (QString ("dax audio set %1 slice=%2 tx=1").arg (dax_ch_).arg (slice_));
-          tx_dax_ = true;
+          // A station has one DAX TX stream, so a third or fourth copy (joined
+          // to a station) gets none of its own. Send on the station's, as
+          // stock JTDX copies all play into the one DAX TX sound device
+          // (KK4CDK, 2026-10-18). Untested on a real radio.
+          t.restart ();
+          while (!(tx_stream_ = station_tx_stream ()) && connected_ && t.elapsed () < 1500) wait_ms (100);
+          tx_borrowed_ = tx_stream_ != 0;
+          if (tx_borrowed_) trace (QString ("own dax_tx refused - sending on the station's DAX TX stream 0x%1").arg (tx_stream_, 0, 16));
         }
+      if (tx_stream_) use_tx_stream ();
+      else trace ("!! no DAX TX stream: PTT will key with no audio");
     }
   return true;
 }
@@ -657,14 +729,15 @@ void FlexTransceiver::release (bool tell_radio)
   if (tell_radio && connected_)
     {
       if (PTT_) send ("xmit 0");
-      if (tx_stream_) send (QString ("stream remove 0x%1").arg (tx_stream_, 8, 16, QChar ('0')));
+      // the station's stream and its DAX transmit setting stay with the station
+      if (tx_stream_ && !tx_borrowed_) send (QString ("stream remove 0x%1").arg (tx_stream_, 8, 16, QChar ('0')));
       if (rx_stream_) send (QString ("stream remove 0x%1").arg (rx_stream_, 8, 16, QChar ('0')));
-      if (tx_dax_) send ("transmit set dax=0");
+      if (tx_dax_ && !tx_borrowed_) send ("transmit set dax=0");
       if (slice_ >= 0 && slice_created_) send (QString ("slice remove %1").arg (slice_));
       if (socket_) socket_->flush ();
     }
   rx_stream_ = tx_stream_ = 0;
-  tx_dax_ = false;
+  tx_dax_ = tx_borrowed_ = false;
   slice_ = -1;
   slice_created_ = false;
   PTT_ = false;
@@ -690,6 +763,8 @@ int FlexTransceiver::do_start (JTDXDateTime * jtdxtime)
   client_id_.clear ();
   replies_.clear ();
   status_log_.clear ();
+  dax_tx_streams_.clear ();
+  client_station_.clear ();
   rx_buf_.clear ();
   frequency_ = 0;
   mode_ = UNK;
@@ -1075,13 +1150,15 @@ void FlexTransceiver::parse_meters (char const * buf, int len)
 void FlexTransceiver::publish_status ()
 {
   QString const line = QString ("Slice %1, DAX channel %2%3").arg (QChar ('A' + slice_letter_)).arg (dax_ch_)
-    .arg (tx_dax_ ? tr (", transmit") : tr (", receive only"));
+    .arg (tx_borrowed_ ? tr (", transmit on the station's DAX TX") : tx_dax_ ? tr (", transmit")
+          : tci_audio_ ? tr (", no DAX TX stream: no transmit audio") : tr (", receive only"));
   FlexShared::instance ().update ([&] (FlexStatus & st) {
       st.up = ready_ && connected_;
       st.status = line;
       st.slice = slice_;
       st.dax_channel = dax_ch_;
       st.tx = tx_dax_;
+      st.tx_missing = tci_audio_ && !tx_dax_;
       st.frequency = qint64 (frequency_);
       if (!model_.isEmpty ()) st.model = model_;
     });

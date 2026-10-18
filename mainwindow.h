@@ -754,6 +754,8 @@ private:
   bool m_tciNoAudio {false};        // JTDX-VU: dropped for lack of TCI audio, until audio arrives
   int m_flexNoAudioCount {0};       // JTDX-VU: Flex reconnects in a row that brought no audio
   bool m_flexAudioSeen {false};     // JTDX-VU: audio arrived on this Flex connection
+  bool m_flexTxWarned {false};      // JTDX-VU: "no DAX TX stream" shown for the current lack of one
+  bool m_flexTxWarnPtt {false};     // JTDX-VU: PTT at the last update, to warn again at each key-up
   QTimer killFileTimer;
   QTimer tuneButtonTimer;
   QTimer cqButtonTimer;

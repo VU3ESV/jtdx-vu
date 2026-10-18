@@ -279,6 +279,57 @@ Last updated: 2026-10-18
 
 ## What changed
 
+### 2026-10-18 — Flex copies 3 and 4 send on the station's DAX TX stream; "no DAX TX stream" warning (UNTESTED on a real radio, no release)
+
+Follow-up to KK4CDK's four-copy report (2026-10-17 entry, and his 2026-10-18 note
+that four stock JTDX rc10 copies all send audio through the one shared DAX TX
+sound device). Reverses the 2026-10-17 "Flex limitation, no change" call; Manoj
+decides whether it ships.
+- `FlexTransceiver.cpp`: every `stream 0x... type=dax_tx client_handle=...` and
+  `stream 0x... removed` status is kept (`dax_tx_streams_`), and every client's
+  `station=` (`client_station_`); "sub dax all" added at start-up. When a copy
+  that joined a station (`bound_handle_`) gets no dax_tx of its own, it waits up
+  to 1.5 s for `station_tx_stream ()`: the bound GUI client's dax_tx stream, else
+  one of a client with the same named station (SmartSDR's DAX program), **never
+  another station's** (that would put our audio on the other transmitter). It
+  then sends `transmit set dax=1` / `dax audio set N slice=S tx=1` as before
+  (`use_tx_stream ()`) and its VITA-49 TX packets carry that stream id.
+  `tx_borrowed_`: on quit it does NOT `stream remove` the station's stream or send
+  `transmit set dax=0`. If the station's stream is removed, it looks for another,
+  else drops to no TX; a station stream that appears later is picked up. Trace
+  lines: "own dax_tx refused - sending on the station's DAX TX stream 0x...",
+  "!! no DAX TX stream: PTT will key with no audio".
+- Warning: `FlexStatus::tx_missing` (DAX audio on, no TX stream); the main window
+  shows "FlexRadio: no DAX TX stream for this copy - PTT keys the radio with no
+  audio" (30 s) when it is found and again at every key-up. The Flex panel's
+  status line says "transmit on the station's DAX TX" / "no DAX TX stream: no
+  transmit audio".
+- `tools/fake_flex.py`: `FAKE_STATION_TX=1` = one dax_tx stream per station (a
+  second create from the same station is refused, code `50000016` invented),
+  dax_tx streams reported to every client with "removed" when they go, TX packets
+  on an unknown stream id dropped; every transmission is logged with its stream.
+  `tools/flex_station_tx_test.sh`: four copies (flexa/flexb GUI clients, flexc/flexd
+  join flexa's station), each in turn calls CQ over UDP; macOS or Linux (Xvfb).
+- **Checked (Linux build in a cloud session, Ubuntu 24.04 / Qt 5, not macOS: no
+  Mac there):** old code against `FAKE_STATION_TX=1`: flexc and flexd key PTT and
+  the fake records nothing - Miguel's fault reproduced. New code: all four
+  transmit; flexa on its stream 0x84003C2D, flexb on 0x84003C2E, flexc and flexd on
+  flexa's 0x84003C2D (full 13.7 s FT8 at ~1500 Hz, RMS ~21800). `NODAX_A=1` (flexa
+  without DAX, so flexc makes the station's stream under its own handle): flexd
+  finds no stream of flexa's and shows the warning (screenshot seen). A jtdxjt9
+  "Subprocess failed with exit code 2" box appeared in that container with four
+  copies; not looked into, unrelated to Flex.
+- **Unknown until tried on a real radio** (the fake's behaviour here is a guess):
+  whether a station's second `stream create type=dax_tx` is refused or granted but
+  dead (granted = our own id, no fallback, still silent); whether the radio
+  reports other clients' dax_tx streams (with "sub dax all") and under which
+  client_handle; and whether it takes TX packets on another client's stream id
+  from our UDP port. If Miguel tries it, his `flex_trace.txt` for copy 3 shows
+  which. Two copies keyed at once on one station share the stream (audio mixes),
+  as stock JTDX copies do through the one sound device.
+- macOS build: not done in this session; `macos.yml` can be run on this branch by
+  hand (workflow_dispatch). No release.
+
 ### 2026-10-18 — KK4CDK: Wanted Call beep silent; New only now keeps Wanted Calls (for the next release)
 
 Miguel: the Wanted list's sound alarm doesn't work, and he found no setting

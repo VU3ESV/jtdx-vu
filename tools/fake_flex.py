@@ -16,6 +16,11 @@ FAKE_GUI_SLICE=1 hands a new GUI client a slice at 14.100 USB, as the 6600 does.
 Several clients may connect at once, each with its own handle; "client gui" is
 refused (F3000001) past FAKE_GUI_LIMIT (default 2, the multiFLEX limit of every
 FLEX-6000) and a non-GUI client may "client bind" to a GUI client's station.
+FAKE_STATION_TX=1 behaves like a real radio with DAX TX: one dax_tx stream per station
+(a GUI client and the non-GUI clients bound to it). A second "stream create type=dax_tx"
+from the same station is refused, dax_tx streams are reported to every client (as
+"sub dax all" asks) with "stream 0x... removed" when they go, and TX packets on a stream
+id the radio does not have are dropped, as a real radio ignores them (KK4CDK, 2026-10-18).
 FAKE_NO_ECHO=1 answers "slice tune" / "slice set" OK but never reports the
 change in the slice status (seen on the FLEX-6600, 2026-10-07).
 FAKE_TUNE_DELAY=0.8 delays the status echo of "slice tune", as a real radio
@@ -54,6 +59,7 @@ def logw(s):
 
 SOCK_H = {}                                               # socket -> that client's handle
 GUI_LIMIT = int(os.environ.get("FAKE_GUI_LIMIT", "2"))     # multiFLEX: GUI clients per radio, every model
+STATION_TX = bool(os.environ.get("FAKE_STATION_TX"))       # one dax_tx stream per station, as a real radio
 
 def status(sock, text, h=None):
     sock.sendall(("S%08X|%s\n" % (h if h is not None else SOCK_H.get(sock, 0), text)).encode())
@@ -67,6 +73,9 @@ def client_line(h):
     cl = state["clients"][h]
     return ("client 0x%08X connected client_id=%s program=%s station=%s local_ptt=1"
             % (h, cl["client_id"], cl["program"] or "none", cl["station"] or "none"))
+
+def tx_stream_line(h):
+    return "stream 0x%08X type=dax_tx client_handle=0x%08X tx=1" % (state["clients"][h]["tx_stream"], h)
 
 def slice_line(n):
     s = state["slices"][n]
@@ -205,19 +214,26 @@ def serve(c, a):
                             cl["rx_stream"] = 0x04000000 | (h & 0xFFFF); body = "0x%08X" % cl["rx_stream"]
                             extra.append("stream 0x%08X type=dax_rx dax_channel=1 client_handle=0x%08X ip=%s port=%d"
                                          % (cl["rx_stream"], h, cl["peer"], cl["udpport"]))
+                        elif STATION_TX and any(x["tx_stream"] for k, x in state["clients"].items() if (x["bound"] or k) == owner):
+                            code = "50000016"                       # the station has its stream (the code is a guess)
                         else:
                             cl["tx_stream"] = 0x84000000 | (h & 0xFFFF); body = "0x%08X" % cl["tx_stream"]
-                            extra.append("stream 0x%08X type=dax_tx client_handle=0x%08X" % (cl["tx_stream"], h))
+                            extra.append(tx_stream_line(h))
+                    elif p[0] == "sub" and p[1] == "dax":
+                        for k, x in state["clients"].items():
+                            if x["tx_stream"]: extra.append(tx_stream_line(k))
                     elif p[0] == "stream" and p[1] == "remove":
                         sid = int(p[2], 16)
                         if sid == cl["rx_stream"]: cl["rx_stream"] = 0
-                        if sid == cl["tx_stream"]: cl["tx_stream"] = 0
+                        if sid == cl["tx_stream"]:
+                            cl["tx_stream"] = 0
+                            if STATION_TX: extra.append("stream 0x%08X removed" % sid)
                     elif p[0] == "xmit":
                         state["xmit"] = int(p[1]); extra.append("interlock state=%s" % ("TRANSMITTING" if state["xmit"] else "READY"))
                 logw("< %s  [0x%08X]" % (cmd, h))
                 c.sendall(("R%s|%s|%s\n" % (seq, code, body)).encode())
                 for e in extra:
-                    if e.startswith(("slice ", "client ", "interlock ")): broadcast(e, h)
+                    if e.startswith(("slice ", "client ", "interlock ")) or (STATION_TX and e.startswith("stream 0x8")): broadcast(e, h)
                     else: status(c, e, h)
     except OSError:
         pass
@@ -229,12 +245,13 @@ def serve(c, a):
             if x["bound"] == h: x["bound"] = 0
         if not state["clients"]: state["xmit"] = 0
     for n in gone: broadcast("slice %d in_use=0" % n, h)
+    if STATION_TX and cl["tx_stream"]: broadcast("stream 0x%08X removed" % cl["tx_stream"], h)
     if cl["gui"]: broadcast("client 0x%08X disconnected" % h, h)
     logw("client 0x%08X closed" % h)
 
 def tx_listener(a):
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM); s.bind(("0.0.0.0", 4991))
-    cur = None; n = 0; last = 0; idx = 0
+    cur = None; n = 0; last = 0; idx = 0; sid = 0; dropped = set()
     while True:
         s.settimeout(1.0)
         try:
@@ -244,11 +261,17 @@ def tx_listener(a):
                 f = os.path.join(a.txdir, "tx%02d.wav" % idx); idx += 1
                 w = wave.open(f, "wb"); w.setnchannels(1); w.setsampwidth(2); w.setframerate(12000)
                 w.writeframes(cur.tobytes()); w.close()
-                logw("TX transmission ended: %d packets, %.2f s -> %s" % (n, len(cur) / 12000.0, f))
+                logw("TX transmission ended: %d packets, %.2f s on stream 0x%08X -> %s" % (n, len(cur) / 12000.0, sid, f))
                 cur = None; n = 0
             continue
         if len(d) < 28 or struct.unpack(">I", d[12:16])[0] != TX_CLASS: continue
-        if cur is None: cur = array.array("h"); n = 0; logw("TX transmission started")
+        sid = struct.unpack(">I", d[4:8])[0]
+        if STATION_TX:
+            with lock: live = {x["tx_stream"] for x in state["clients"].values() if x["tx_stream"]}
+            if sid not in live:
+                if sid not in dropped: dropped.add(sid); logw("TX packets on unknown stream 0x%08X dropped" % sid)
+                continue
+        if cur is None: cur = array.array("h"); n = 0; logw("TX transmission started on stream 0x%08X" % sid)
         samples = struct.unpack(">%dh" % ((len(d) - 28) // 2), d[28:])
         for i in range(0, len(samples) - 1, 2): cur.append(int((samples[i] + samples[i + 1]) / 2))   # 24 -> 12 kHz
         n += 1; last = time.time()

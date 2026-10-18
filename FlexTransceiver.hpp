@@ -160,6 +160,13 @@ private:
   quint32 rx_stream_;
   quint32 tx_stream_;
   bool tx_dax_;
+  // JTDX-VU: a station has one DAX TX stream (KK4CDK, 2026-10-18). A copy that
+  // joined a station and could not create its own sends on the station's
+  bool tx_borrowed_ {false};         // tx_stream_ is the station's, not ours: never remove it
+  QMap<quint32, quint32> dax_tx_streams_;   // every dax_tx stream the radio reported -> its client handle
+  QHash<quint32, QString> client_station_;  // client handle -> station= from its client status
+  quint32 station_tx_stream () const;       // the joined station's dax_tx stream, 0 = none
+  void use_tx_stream ();             // transmit set dax=1 and route our DAX channel's TX to our slice
 
   Frequency frequency_;              // from the radio
   Frequency last_set_frequency_;
