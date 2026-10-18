@@ -279,6 +279,24 @@ Last updated: 2026-10-18
 
 ## What changed
 
+### 2026-10-18 — v0.7.6-rc1 published (pre-release); Windows CI fixed for Hamlib
+
+Manoj: "fix and rebuild rc1", then "tag it when green". The cloud session's
+branch `claude/beautiful-goldberg-4kaz34` (Flex station TX stream + the
+0.7.6-rc1 bump, entries below) was fast-forwarded into `jtdx-vu`; macOS
+local build clean, no Fortran changed since v0.7.5.
+- **Windows CI broke in Hamlib 4.7.2** (pinned, so MSYS2's newer GCC):
+  `precise_time.c` calls `assert()` without `<assert.h>`, now an implicit
+  declaration error. Fix: `CFLAGS="-g -O2 -include assert.h"` on Hamlib's
+  configure (`46749b04`). Not `CPPFLAGS`: windres gets those and rejects
+  `-include` (`version_dll.rc`, run 39086335536). Check run 39087117003 green.
+- Tag `v0.7.6-rc1` (lightweight, as the rc tags) on `46749b04`, GitHub
+  **pre-release** created first so CI attaches to it. Tag CI: Windows
+  39088188850, macOS 39088188872.
+- Reply to Miguel (Flex copies 3-4 + Wanted Call beep, rc1 link):
+  `~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-18.txt`, for
+  Manoj to send. Flex change untested on a real radio; **waiting on Miguel**.
+
 ### 2026-10-18 — 0.7.6-rc1 (Windows + macOS) for KK4CDK: the four-copy TX audio test
 
 Manoj: "start the Windows build as an rc", then "build a rc1 for mac also".
