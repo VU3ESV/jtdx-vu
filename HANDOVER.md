@@ -279,6 +279,17 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-19 — 0.7.6-rc3: rc2 plus the LoTW users download (test build)
+
+Manoj: "merge lotw into jtdx-vu and make rc3" (rc2's macOS CI was still
+running; rc3 supersedes it). `claude/lotw-fetch-d0bae6` (`2a4691f1`, entry
+below) merged cleanly into `jtdx-vu`; `Versions.cmake` 0.7.6-rc2 -> rc3. No
+Fortran changed since rc1. Local macOS build clean. Checked with a scratch
+CountryDat harness: the new bundled CSV (newest 2026-10-12) gives W1AW
+2026-10-07 and UT7QF 2026-10-05; the old 2022 CSV gives nobody (Miguel's "no
+dots"). Fetch Now itself not yet clicked in the app. GitHub pre-release
+`v0.7.6-rc3`.
+
 ### 2026-10-19 — LoTW user marks: Settings > General "Logbook of the World User Validation" (branch `claude/lotw-fetch-d0bae6`, for the next rc)
 
 Miguel KK4CDK (testing 0.7.6-rc1) never saw LoTW dots as in JTDX
