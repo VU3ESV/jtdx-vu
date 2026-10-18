@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-18
+Last updated: 2026-10-19
 
 ## Current state
 
@@ -278,6 +278,37 @@ Last updated: 2026-10-18
   `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-10-19 — TCI: TX audio silent after an automatic reconnect (for the next build)
+
+Manoj lost transmit on QO-100 (Aether QO-100 profile, AetherSDR dev build ->
+IC-705) on 2026-10-18. Aether's log (`aethersdr-20261018-232328.log`): an over
+started 23:25:22, at 23:25:25 Aether dropped the client ("RX audio stopped:
+backlog limit" after a 1.2 s main-thread stall, closeCode 1009), JTDX-VU
+reconnected at 23:25:30, and every over until his restart at 23:41 had PTT
+keyed but "TCI TX summary ... peak=0 rms=0".
+- **Cause:** `Configuration::impl::close_rig()` disconnects the old rig's
+  signals before it can say `tci_mod_active(false)`, so a drop mid-over left
+  `MainWindow::m_tci_mod_active` true. `startTx2()` then thought the modulator
+  was still running and skipped `transmit()` on every later over: PTT went
+  on, the new `TCITransceiver`'s modulator stayed Idle and `readAudioData()`
+  answered every TxChrono with zeros. A drop between overs was harmless, which
+  is why the 2026-10-03 reconnect tests never saw it. FlexRadio VITA-49 uses
+  the same flag and had the same exposure.
+- **Fix:** `close_rig()` emits `transceiver_TCImodActive (false)` after the
+  disconnect - a closed rig has no modulator running.
+- **Test:** `tools/tci_reconnect_tx_test.sh` (new; throwaway `-r tcitxtest`,
+  port 50095): CQ over UDP, drop the client 3 s into the first over, wait for
+  the reconnect, CQ again (the failure halts Tx, as Manoj re-enabled it by
+  hand), print each over's TX peak. `tools/fake_tci.py` now sends TxChrono
+  while `trx` is on (1024 frames, `length` counts floats as AetherSDR), logs
+  "TX over ... peak=" per over, unkeys a client that goes, and drops the
+  client when `<log>.drop` exists. Installed v0.7.5: peak 0.9990 before the
+  drop, **0.0000 on both overs after**; this build: **0.9990 on both**.
+  (Two fake gotchas met on the way: a frame under 126 bytes must use the 7-bit
+  length or Qt drops the connection; and only the first `length` floats of a
+  TX frame are filled, the rest of JTDX-VU's buffer is uninitialised.)
+- macOS bundle built; not yet tried on air. No release (Manoj decides).
 
 ### 2026-10-18 — PSK Reporter: one program name per version (for the next build)
 

@@ -360,6 +360,9 @@ or Pi 5 is recommended.
   and the status bar says "TCI: ... reconnecting every 5 s" instead of
   the Rig Control Error box; once the SDR program is back it shows "TCI
   reconnected" and carries on. Other rig types behave as before.
+  Up to v0.7.6-rc1, a drop in the middle of an over left every later over
+  silent (PTT keyed, no TX audio) until JTDX-VU was restarted; fixed for the
+  next build.
   With TCI audio on, JTDX-VU also watches the receive audio: if none
   arrives for 10 s (Tx aside), it asks for it again once, then says
   "no audio from the SDR program - restart it" and keeps retrying until

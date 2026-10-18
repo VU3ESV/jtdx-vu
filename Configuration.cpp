@@ -6698,6 +6698,11 @@ void Configuration::impl::close_rig ()
         }
       rig_connections_.clear ();
       rig_active_ = false;
+      // JTDX-VU: a rig closed mid-over (TCI drop, then auto-reconnect) never
+      // sends its tci_mod_active(false) - it is disconnected above - so the
+      // main window kept "modulator active" and skipped transmit() on every
+      // later over: PTT keyed, TCI audio all zeros until a restart.
+      Q_EMIT self_->transceiver_TCImodActive (false);
 //      printf("%s(%0.1f) Configuration running rig closed\n",jtdxtime_->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),jtdxtime_->GetOffset());
     }
 }

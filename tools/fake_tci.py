@@ -10,6 +10,8 @@
 # FAKE_TRX_DELAY=0.35 delays the trx (PTT) echo as AetherSDR does - the Fake It
 # split runaway needs it.
 # FAKE_NO_VFO=1 leaves vfo:0,0 out of the start-up burst (AetherSDR, issue #1).
+# While trx is on it sends TxChrono and logs "TX over ... peak=" per over;
+# a file <log file>.drop drops the client (it should reconnect).
 import socket, hashlib, base64, threading, time, sys, struct
 G = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 log = open(sys.argv[1], 'a', buffering=1)
@@ -54,6 +56,7 @@ def frames(c):
         buf = buf[i+n:]
         if op == 8: return
         if op == 1: yield data.decode()
+        if op == 2: yield data              # binary: the client's TX audio
 
 def reply(cmd):
     name, _, a = cmd.partition(":")
@@ -119,6 +122,37 @@ def stream_audio(c, alive, lock):
         time.sleep(2048 / 48000)
 
 PUSH = sys.argv[1] + ".push"
+DROP = sys.argv[1] + ".drop"
+# While trx is on, send TxChrono every 1024 frames (as AetherSDR) and measure
+# the TX audio the client returns: "TX over ... peak=" per over in the log
+# (peak 0 = the silent overs of 2026-10-18).
+def chrono(c, alive, lock, tx):
+    n = 1024                               # stereo frames per block; length counts floats
+    hdr = struct.pack("<16I", 0, 48000, 3, 0, 0, n * 2, 3, 2, *([0] * 8))
+    ws = bytes([0x82, len(hdr)]) + hdr      # < 126 bytes: 7-bit length, or Qt drops us
+    while alive[1]:
+        if state.get("trx:0", "").startswith("true"):
+            if tx["t0"] is None: tx.update(t0=time.time(), peak=0.0, frames=0)
+            try:
+                with lock: c.sendall(ws)
+            except OSError: return
+        elif tx["t0"] is not None:
+            log.write("%.3f TX over %.1f s frames=%d peak=%.4f\n"
+                      % (time.time(), time.time() - tx["t0"], tx["frames"], tx["peak"]))
+            tx["t0"] = None
+        time.sleep(n / 48000.0)
+    if tx["t0"] is not None:
+        log.write("%.3f TX over cut by the drop %.1f s frames=%d peak=%.4f\n"
+                  % (time.time(), time.time() - tx["t0"], tx["frames"], tx["peak"]))
+
+def tx_audio(data, tx):
+    import array
+    if len(data) < 64 or struct.unpack("<I", data[24:28])[0] != 2 or tx["t0"] is None: return
+    n = struct.unpack("<I", data[20:24])[0]          # floats; the rest is not filled
+    a = array.array("f"); a.frombytes(data[64:64 + min(n, (len(data) - 64) // 4) * 4])
+    tx["frames"] += n // 2
+    if a: tx["peak"] = max(tx["peak"], max(abs(x) for x in a))
+
 TRX_DELAY = float(os.environ.get("FAKE_TRX_DELAY", "0"))   # seconds before trx is echoed
 def pusher(c, alive, lock):
     # a file <log file>.push is sent as one text message, as if the SDR program
@@ -131,6 +165,13 @@ def pusher(c, alive, lock):
                 with lock: c.sendall(frame(t))
             except OSError: return
             log.write("%.3f pushed %s\n" % (time.time(), t))
+        if os.path.exists(DROP):
+            # <log file>.drop: drop this client (as AetherSDR's backlog limit
+            # did on 2026-10-18), keep listening for its reconnect
+            os.remove(DROP); log.write("%.3f dropping client\n" % time.time())
+            try: c.shutdown(socket.SHUT_RDWR)
+            except OSError: pass
+            return
         time.sleep(0.2)
 
 def serve(c):
@@ -152,8 +193,12 @@ def serve(c):
     alive = [False, True]
     lock = threading.Lock()
     threading.Thread(target=pusher, args=(c, alive, lock), daemon=True).start()
+    tx = {"t0": None}
+    threading.Thread(target=chrono, args=(c, alive, lock, tx), daemon=True).start()
     try:
         for msg in frames(c):
+            if isinstance(msg, bytes):
+                tx_audio(msg, tx); continue
             for cmd in filter(None, msg.split(";")):
                 r = reply(cmd)
                 if cmd.startswith("audio_start") and not alive[0]:
@@ -174,6 +219,7 @@ def serve(c):
     except OSError:
         pass
     alive[0] = alive[1] = False
+    state["trx:0"] = "false"             # the SDR program unkeys a client that goes
     log.write("%.3f closed\n" % time.time())
 
 load_wavs()
