@@ -8341,7 +8341,9 @@ void MainWindow::pskSetLocal ()
   QString antenna_description;
   if (!matches.isEmpty ()) antenna_description = stations->index (matches.first ().row (), StationList::description_column).data ().toString ();
   // qDebug() << "To PSKreporter: local station details";
-  psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (), antenna_description, QString {QCoreApplication::applicationName () + " v" + QCoreApplication::applicationVersion () + (m_tci ? " tci " : " ") + revision()}.simplified ());
+  // JTDX-VU: one fixed name per version ("JTDX-VU v0.7.6"): no rig name,
+  // "tci", rc suffix or build id, which PSK Reporter lists as separate programs
+  psk_Reporter->setLocalStation(m_config.my_callsign (), m_config.my_grid (), antenna_description, "JTDX-VU v" + QCoreApplication::applicationVersion ().section ('-', 0, 0));
 }
 
 void MainWindow::transmitDisplay (bool transmitting)

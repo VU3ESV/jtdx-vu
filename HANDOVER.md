@@ -279,6 +279,18 @@ Last updated: 2026-10-18
 
 ## What changed
 
+### 2026-10-18 — PSK Reporter: one program name per version (for the next build)
+
+Manoj saw PSK Reporter's software list split JTDX-VU into ~40 rows: the
+string was `applicationName` (which carries the `--rig-name`, e.g.
+"JTDX-VU - Flexradio") + version + " tci " + git revision, stock JTDX code.
+PSK Reporter folds known programs (JTDX, WSJT-X) but lists unknown strings
+verbatim. Manoj: "make it JTDX-VU v0.7.6". `setLocalStation` in
+`mainwindow.cpp` now sends `"JTDX-VU v" + applicationVersion ()` cut at the
+first '-' (so 0.7.6-rc1 reports as v0.7.6). Not in v0.7.6-rc1 (tagged
+before). A single "JTDX-VU" row would need PSK Reporter's operator to group
+it. Builds; Help > About and the title bar still show rc and revision.
+
 ### 2026-10-18 — v0.7.6-rc1 published (pre-release); Windows CI fixed for Hamlib
 
 Manoj: "fix and rebuild rc1", then "tag it when green". The cloud session's
