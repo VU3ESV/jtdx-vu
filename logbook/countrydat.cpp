@@ -25,11 +25,13 @@
 #include <QTextStream>
 
 
-void CountryDat::init(const QString filename,const QString filename2)
+void CountryDat::init(const QString filename,const QString filename2,int lotwDays)
 {
     _filename = filename;
     _data.clear();
     _filename2 = filename2;
+    _lotwDays = lotwDays;
+    _lotwVersion.clear();
     _data2.clear();
     _name.clear();
     _name.insert("where?",tr("where?"));
@@ -551,22 +553,22 @@ void CountryDat::load()
     QFile inputFile2(_filename2);
     if (inputFile2.open(QIODevice::ReadOnly))
     {
-       QDate first = QDate::currentDate().addDays(-365);
+       QDate first = QDate::currentDate().addDays(-_lotwDays);
        QDate last;
+       QDate newest;
        QTextStream in(&inputFile2);
        while ( !in.atEnd() )
        {
           QString line1 = in.readLine();
-          if ( !in.atEnd() )
+          QStringList items = line1.split(',');
+          if (items.size() > 1)
           {
-            QStringList items = line1.split(',');
-            if (items.size() > 1)
-            {
-                last = QDate::fromString(items[1],"yyyy-MM-dd");
-                if (last > first) _data2.insert(items[0],items[1]);
-            }
+              last = QDate::fromString(items[1],"yyyy-MM-dd");
+              if (last > first) _data2.insert(items[0],items[1]);
+              if (last > newest) newest = last;
           }
        }
+       if (newest.isValid()) _lotwVersion = newest.toString("yyyy-MM-dd");
 //    printf("%d active lotw users.\n",_data2.size());
     inputFile2.close();
     }

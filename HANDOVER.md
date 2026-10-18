@@ -279,6 +279,41 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-19 — LoTW user marks: Settings > General "Logbook of the World User Validation" (branch `claude/lotw-fetch-d0bae6`, for the next rc)
+
+Miguel KK4CDK (testing 0.7.6-rc1) never saw LoTW dots as in JTDX
+2.2.160-rc10 (he saw `*`, the stock hinted-decode mark, unrelated).
+- **Cause:** `LogBook::init` loads `:/lotw-user-activity.csv` (JTDX 2.2.159's
+  copy, newest upload 2022-02-20) unless the data directory has its own, and
+  `CountryDat::load` keeps only uploads within 365 days, so `getLOTW` was ""
+  for everyone and `•` / `°` never appeared.
+- **Fix:** as JTDX 2.2.160 (its source isn't published; upstream git stops at
+  159), a "Logbook of the World User Validation" group at the bottom of
+  Settings > General: "Users CSV file URL:" (default
+  `https://lotw.arrl.org/lotw-user-activity.csv`) + **Fetch Now**, "Age of last
+  upload less than:" N days (1-9999, default 365) and "lotw CSV Version:
+  <date>" = newest upload date in the loaded file (`CountryDat::lotwVersion`).
+  Wording and settings keys follow WSJT-X, which 2.2.160 copied
+  (`[Configuration] LotWUsersURL`, `LotWDaysSinceLastUpload`). Fetch Now
+  (`Configuration::impl::on_LotW_CSV_fetch_push_button_clicked`, own
+  QNetworkAccessManager) checks the reply looks like `CALL,yyyy-MM-dd`, writes
+  `lotw-user-activity.csv` in the data directory with `QSaveFile` (temp file +
+  rename) and emits `Configuration::lotw_users_changed`; MainWindow then runs
+  `init_logbook ()` (which now passes the age and sets the version label), so
+  marks show on the next decodes without a restart. Changing the age and
+  pressing OK reloads the same way. No automatic fetch.
+- Bundled `lotw-user-activity.csv` refreshed from ARRL (2026-10-12, 236 500
+  calls, 6.3 MB) so a fresh install has marks for a year.
+- `CountryDat::load` no longer skips the file's last line (stock quirk).
+- **Tested:** macOS build clean. Harnesses (scratch, not committed):
+  CountryDat on the old bundled file at 365 days -> W1AW / VU2CPL "" (the bug);
+  on the new file -> W1AW 2026-10-07, VU2CPL 2026-10-10, version 2026-10-12;
+  K1JT's last upload is 2021-11-15, so "" at 365 days and a date at 3650. A Qt
+  harness doing the same GET / check / QSaveFile as Fetch Now got 6 331 560
+  bytes and the same dates; `https://lotw.arrl.org/` (HTML) is refused. The
+  button itself was not clicked in the GUI (the computer-use tool could only
+  reach the running Aether QO-100 copy, same bundle id). No release.
+
 ### 2026-10-19 — 0.7.6-rc2: rc1 plus the TCI reconnect fix, Ignore CALL, no repeat logging (test build)
 
 Manoj: "merge and make rc2". `feat/ignore-call` merged into `jtdx-vu`

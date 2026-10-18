@@ -1133,6 +1133,14 @@ MainWindow::MainWindow(bool multiple, QSettings * settings, QSharedMemory *shdme
 //  if (m_tci) Q_EMIT m_config.transceiver_trfrequency(ui->TxFreqSpinBox->value () - m_XIT); 
 //  else Q_EMIT transmitFrequency (ui->TxFreqSpinBox->value () - m_XIT);
 
+  // JTDX-VU: LoTW users CSV fetched (Settings > General) or upload age changed
+  connect (&m_config, &Configuration::lotw_users_changed, this, [this] {
+      init_logbook ();
+      countQSOs ();
+      statusBar ()->showMessage (tr ("LoTW users file loaded, version %1").arg (m_logBook.lotwVersion ()), 15000);
+      if (m_config.write_decoded_debug ()) writeToALLTXT ("Logbook reloaded after LoTW users update");
+    });
+
   // JTDX-VU: Club Log worked-before source and needed-DXCC alerts
   m_clubLog = new ClubLog {m_settings, network_manager, this};
   connect (m_clubLog, &ClubLog::log_updated, this, [this] {
@@ -7440,7 +7448,9 @@ void MainWindow::switch_to_band (QString const& band)
 void MainWindow::init_logbook ()
 {
   m_logBook.init(m_config.callNotif() ? m_config.my_callsign() : "",m_config.gridNotif() ? m_config.my_grid() : "",m_config.timeFrom(),
-                 m_clubLog ? m_clubLog->adif_path () : "", m_clubLog && m_clubLog->confirmed_only (), m_clubLog ? m_clubLog->local_since () : "");
+                 m_clubLog ? m_clubLog->adif_path () : "", m_clubLog && m_clubLog->confirmed_only (), m_clubLog ? m_clubLog->local_since () : "",
+                 m_config.lotw_days_since_upload ());
+  m_config.set_lotw_version (m_logBook.lotwVersion ());   // JTDX-VU: Settings > General LoTW version
   ui->decodedTextBrowser->refilter (m_logBook);  // JTDX-VU: live Show filter follows the log
 }
 

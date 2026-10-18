@@ -169,6 +169,10 @@ public:
   bool monitor_off_at_startup () const;
   bool monitor_last_used () const;
   bool check_for_updates () const;   // JTDX-VU: Settings > General "Check for updates automatically"
+  // JTDX-VU: Settings > General "Logbook of the World User Validation"
+  QString lotw_users_url () const;
+  int lotw_days_since_upload () const;
+  void set_lotw_version (QString const&);   // newest upload date in the loaded CSV, shown as the version
   bool log_as_RTTY () const;
   bool report_in_comments () const;
   bool distance_in_comments () const;
@@ -393,6 +397,9 @@ public:
 
   // JTDX-VU: Settings > JTTY was accepted (auto CQ, exchange, macro sets)
   Q_SIGNAL void jtty_settings_changed ();
+
+  // JTDX-VU: LoTW users CSV fetched, or the upload age changed - reload the LogBook
+  Q_SIGNAL void lotw_users_changed ();
 
   //
   // This signal is emitted when the UDP server changes

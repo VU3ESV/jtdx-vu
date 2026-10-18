@@ -159,6 +159,10 @@
 #include <QThread>
 #include <QTimer>
 #include <QStandardPaths>
+#include <QSaveFile>
+#include <QNetworkAccessManager>
+#include <QNetworkRequest>
+#include <QNetworkReply>
 #include <QFont>
 #include <QFontDialog>
 #include <QColorDialog>
@@ -447,6 +451,7 @@ private:
   void insert_station ();
 
   Q_SLOT void on_font_push_button_clicked ();
+  Q_SLOT void on_LotW_CSV_fetch_push_button_clicked ();   // JTDX-VU
   Q_SLOT void on_decoded_text_font_push_button_clicked ();
   Q_SLOT void on_PTT_port_combo_box_activated (int);
   Q_SLOT void on_CAT_port_combo_box_activated (int);
@@ -803,6 +808,14 @@ private:
   bool monitor_off_at_startup_;
   bool monitor_last_used_;
   bool check_for_updates_ {true};   // JTDX-VU: automatic GitHub release check (UpdateCheck)
+  // JTDX-VU: Settings > General "Logbook of the World User Validation"
+  QString lotw_users_url_;
+  int lotw_days_since_upload_ {365};
+  QString lotw_version_;
+  QNetworkAccessManager * lotw_network_manager_ {nullptr};
+  QNetworkReply * lotw_reply_ {nullptr};
+  void on_lotw_reply (QNetworkReply *);
+  void show_lotw_version ();
   bool log_as_RTTY_;
   bool report_in_comments_;
   bool distance_in_comments_;
@@ -1038,6 +1051,13 @@ bool Configuration::filterUDP () const {return m_->filterUDP_;}
 bool Configuration::monitor_off_at_startup () const {return m_->monitor_off_at_startup_;}
 bool Configuration::monitor_last_used () const {return m_->rig_is_dummy_ || m_->monitor_last_used_;}
 bool Configuration::check_for_updates () const {return m_->check_for_updates_;}
+QString Configuration::lotw_users_url () const {return m_->lotw_users_url_;}
+int Configuration::lotw_days_since_upload () const {return m_->lotw_days_since_upload_;}
+void Configuration::set_lotw_version (QString const& version)
+{
+  m_->lotw_version_ = version;
+  m_->show_lotw_version ();
+}
 bool Configuration::log_as_RTTY () const {return m_->log_as_RTTY_;}
 bool Configuration::send_to_eqsl () const {return m_->send_to_eqsl_;}
 QString Configuration::eqsl_username () const {return m_->eqsl_username_;}
@@ -2191,6 +2211,9 @@ Radio::convert_dark("#fafbfe",useDarkStyle_),Radio::convert_dark("#dcdef1",useDa
   ui_->monitor_off_check_box->setChecked (monitor_off_at_startup_);
   ui_->monitor_last_used_check_box->setChecked (monitor_last_used_);
   ui_->check_for_updates_check_box->setChecked (check_for_updates_);   // JTDX-VU
+  ui_->LotW_CSV_URL_line_edit->setText (lotw_users_url_);
+  ui_->LotW_days_since_upload_spin_box->setValue (lotw_days_since_upload_);
+  show_lotw_version ();
   ui_->log_as_RTTY_check_box->setChecked (log_as_RTTY_);
   ui_->report_in_comments_check_box->setChecked (report_in_comments_);
   ui_->distance_in_comments_check_box->setChecked (distance_in_comments_);
@@ -2561,6 +2584,9 @@ void Configuration::impl::read_settings ()
 
   monitor_last_used_ = settings_->value ("MonitorLastUsed", false).toBool ();
   check_for_updates_ = settings_->value ("CheckForUpdates", true).toBool ();   // JTDX-VU
+  lotw_users_url_ = settings_->value ("LotWUsersURL", "https://lotw.arrl.org/lotw-user-activity.csv").toString ();
+  if (lotw_users_url_.trimmed ().isEmpty ()) lotw_users_url_ = "https://lotw.arrl.org/lotw-user-activity.csv";
+  lotw_days_since_upload_ = qBound (1, settings_->value ("LotWDaysSinceLastUpload", 365).toInt (), 9999);
   spot_to_psk_reporter_ = settings_->value ("PSKReporter", false).toBool ();
   spot_to_dxsummit_ = settings_->value ("AllowSpotsDXSummit", false).toBool ();
   prevent_spotting_false_ = settings_->value ("preventFalseUDPspots", true).toBool ();
@@ -2912,6 +2938,8 @@ void Configuration::impl::write_settings ()
   settings_->setValue ("MonitorOFF", monitor_off_at_startup_);
   settings_->setValue ("MonitorLastUsed", monitor_last_used_);
   settings_->setValue ("CheckForUpdates", check_for_updates_);   // JTDX-VU
+  settings_->setValue ("LotWUsersURL", lotw_users_url_);
+  settings_->setValue ("LotWDaysSinceLastUpload", lotw_days_since_upload_);
   settings_->setValue ("PSKReporter", spot_to_psk_reporter_);
   settings_->setValue ("AllowSpotsDXSummit", spot_to_dxsummit_);
   settings_->setValue ("preventFalseUDPspots", prevent_spotting_false_);
@@ -3675,6 +3703,13 @@ void Configuration::impl::accept ()
   monitor_off_at_startup_ = ui_->monitor_off_check_box->isChecked ();
   monitor_last_used_ = ui_->monitor_last_used_check_box->isChecked ();
   check_for_updates_ = ui_->check_for_updates_check_box->isChecked ();   // JTDX-VU
+  lotw_users_url_ = ui_->LotW_CSV_URL_line_edit->text ().trimmed ();
+  if (lotw_users_url_.isEmpty ()) lotw_users_url_ = "https://lotw.arrl.org/lotw-user-activity.csv";
+  if (ui_->LotW_days_since_upload_spin_box->value () != lotw_days_since_upload_)
+    {
+      lotw_days_since_upload_ = ui_->LotW_days_since_upload_spin_box->value ();
+      Q_EMIT self_->lotw_users_changed ();   // reload the LogBook with the new age
+    }
   type_2_msg_gen_ = static_cast<Type2MsgGen> (ui_->type_2_msg_gen_combo_box->currentIndex ());
   log_as_RTTY_ = ui_->log_as_RTTY_check_box->isChecked ();
   report_in_comments_ = ui_->report_in_comments_check_box->isChecked ();
@@ -6923,3 +6958,72 @@ ENUM_QDATASTREAM_OPS_IMPL (Configuration, Type2MsgGen);
 
 ENUM_CONVERSION_OPS_IMPL (Configuration, DataMode);
 ENUM_CONVERSION_OPS_IMPL (Configuration, Type2MsgGen);
+
+// JTDX-VU: Settings > General "Fetch Now" - download the ARRL LoTW user
+// activity CSV into the data directory, where it overrides the bundled copy
+// (LogBook::init), and have the main window reload the LogBook.
+void Configuration::impl::on_LotW_CSV_fetch_push_button_clicked ()
+{
+  if (lotw_reply_) return;
+  QUrl url {ui_->LotW_CSV_URL_line_edit->text ().trimmed (), QUrl::StrictMode};
+  if (!url.isValid () || url.isRelative ())
+    {
+      JTDXMessageBox::warning_message (this, tr ("LoTW users"), tr ("The users CSV file URL is not valid."));
+      return;
+    }
+  if (!lotw_network_manager_) lotw_network_manager_ = new QNetworkAccessManager {this};
+  QNetworkRequest request {url};
+  request.setHeader (QNetworkRequest::UserAgentHeader, "JTDX-VU");
+  request.setAttribute (QNetworkRequest::RedirectPolicyAttribute, QNetworkRequest::NoLessSafeRedirectPolicy);
+  lotw_reply_ = lotw_network_manager_->get (request);
+  connect (lotw_reply_, &QNetworkReply::finished, this, [this, reply = lotw_reply_] {on_lotw_reply (reply);});
+  connect (lotw_reply_, &QNetworkReply::downloadProgress, this, [this] (qint64 received, qint64) {
+      ui_->LotW_CSV_version_label->setText (tr ("Fetching ... %1 kB").arg (received / 1024));
+    });
+  ui_->LotW_CSV_fetch_push_button->setEnabled (false);
+  ui_->LotW_CSV_version_label->setText (tr ("Fetching ..."));
+}
+
+void Configuration::impl::on_lotw_reply (QNetworkReply * reply)
+{
+  lotw_reply_ = nullptr;
+  reply->deleteLater ();
+  ui_->LotW_CSV_fetch_push_button->setEnabled (true);
+  auto body = reply->readAll ();
+  QString error;
+  if (reply->error () != QNetworkReply::NoError)
+    {
+      error = reply->errorString ();
+    }
+  else
+    {
+      // expect "CALL,yyyy-MM-dd,hh:mm:ss" lines, not an HTML error page
+      auto first_line = QString::fromLatin1 (body.left (body.indexOf ('\n')));
+      if (body.size () < 1024 || !first_line.contains (QRegularExpression {"^[A-Za-z0-9/]+,\\d{4}-\\d{2}-\\d{2}"}))
+        {
+          error = tr ("the reply is not a LoTW user activity CSV file");
+        }
+    }
+  if (error.isEmpty ())
+    {
+      QDir data_dir {QStandardPaths::writableLocation (QStandardPaths::DataLocation)};
+      data_dir.mkpath (".");
+      QSaveFile file {data_dir.absoluteFilePath ("lotw-user-activity.csv")};   // temp file, renamed on commit
+      if (!file.open (QIODevice::WriteOnly) || file.write (body) != body.size () || !file.commit ())
+        {
+          error = tr ("cannot write %1").arg (QDir::toNativeSeparators (file.fileName ()));
+        }
+    }
+  if (!error.isEmpty ())
+    {
+      show_lotw_version ();
+      JTDXMessageBox::warning_message (this, tr ("LoTW users"), tr ("Fetching the LoTW users file failed: %1").arg (error));
+      return;
+    }
+  Q_EMIT self_->lotw_users_changed ();   // main window reloads the LogBook and calls set_lotw_version
+}
+
+void Configuration::impl::show_lotw_version ()
+{
+  ui_->LotW_CSV_version_label->setText (tr ("lotw CSV Version: %1").arg (lotw_version_));
+}

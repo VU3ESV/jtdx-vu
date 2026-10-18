@@ -22,10 +22,11 @@ class CountryDat
 public:
   static inline QString tr(const char *sourceText, const char *disambiguation = Q_NULLPTR, int n = -1) \
         { return QCoreApplication::translate("CountryDat", sourceText, disambiguation, n); }
-  void init(const QString filename,const QString filename2);
+  void init(const QString filename,const QString filename2,int lotwDays = 365);
   void load();
   QString find(const QString prefix); // return country name or ""
   QString find2(const QString call); // return lotw date or ""
+  QString lotwVersion() const {return _lotwVersion;} // JTDX-VU: newest upload date in the LoTW CSV
    
 private:
   QString _extractName(const QString line);
@@ -37,6 +38,8 @@ private:
   QStringList _extractPrefix(QString &line, bool &more);
 
   QString _filename,_filename2;
+  int _lotwDays {365};      // JTDX-VU: Settings > General "Age of last upload less than"
+  QString _lotwVersion;
   QHash<QString, QString> _data;
   QHash<QString, QString> _data2;
   QHash<QString, QString> _name;

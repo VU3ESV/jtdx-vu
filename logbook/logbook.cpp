@@ -16,7 +16,7 @@ namespace
 }
 
 void LogBook::init(const QString mycall,const QString mygrid,const QString mydate,
-                   const QString clublogFile, bool clublogConfirmedOnly, const QString clublogSince)
+                   const QString clublogFile, bool clublogConfirmedOnly, const QString clublogSince, int lotwDays)
 {
   QDir dataPath {QStandardPaths::writableLocation (QStandardPaths::DataLocation)};
   QString countryDataFilename,lotwDataFilename;
@@ -39,7 +39,7 @@ void LogBook::init(const QString mycall,const QString mygrid,const QString mydat
       lotwDataFilename = QString {":/"} + lotwFileName;
     }
 
-  _countries.init(countryDataFilename,lotwDataFilename);
+  _countries.init(countryDataFilename,lotwDataFilename,lotwDays);
   _countries.load();
 
   _log.init(dataPath.absoluteFilePath (logFileName), &_countries);
