@@ -10,6 +10,12 @@ void QsoHistory::setQueue (QStringList const& calls)
   for (int i = 0; i < calls.size (); ++i) _queue.insert (Radio::base_callsign (calls[i]), calls.size () - i);
 }
 
+void QsoHistory::setIgnored (QStringList const& calls)
+{
+  _ignored.clear ();
+  for (auto const& c : calls) _ignored.insert (Radio::base_callsign (c));
+}
+
 void QsoHistory::init()
 {
     _data.clear();
@@ -186,7 +192,7 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
             bool mycall = false;
             bool lastcalled = false;
             foreach(QString key,_data.keys()) {
-              on_black=_blackdata.value(key,0);
+              on_black=black(key);
               tt=_data[key];
               if (on_black == 0 && tt.time == max_r_time && !tt.continent.isEmpty() && (!lastcalled || tt.time == tt.b_time) &&
                   (tt.status == RCALL || tt.status == RREPORT || tt.status == RRREPORT || tt.status == RRR || tt.status == RRR73 || 
@@ -237,7 +243,7 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
             bool mycall = false;
             bool lastcalled = false;
             foreach(QString key,_data.keys()) {
-              on_black=_blackdata.value(key,0);
+              on_black=black(key);
               tt=_data[key];
               if (on_black == 0 && tt.time == max_r_time && ((tt.time - _CQ.time < 300 && tt.time >= 300) || (tt.time < 300 && tt.time - (_CQ.time - 86100) < 300))  && !tt.continent.isEmpty() && (!lastcalled || tt.time == tt.b_time) &&
                   (tt.status == RCALL || tt.status == RREPORT || tt.status == RRREPORT || tt.status == RRR || tt.status == RRR73 || 
@@ -287,7 +293,7 @@ QsoHistory::Status QsoHistory::autoseq(QString &callsign, QString &grid, QString
             dist = 0;
             CALLED is_called;
             foreach(QString key,_data.keys()) {
-              on_black=_blackdata.value(key,0);
+              on_black=black(key);
               is_called.rep=-35;
               is_called.time=0;
               is_called=_calldata.value(key,is_called);

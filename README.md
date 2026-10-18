@@ -223,6 +223,17 @@ or Pi 5 is recommended.
   and the station is queued, so AutoSeq calls it again when it sends CQ or
   RR73/73 to someone else (the latter needs Settings > Notifications
   "RR73/73" ticked).
+- **Ignore a station** (since the next release). Right-click a decode >
+  **Ignore CALL (never answer)**: AutoSeq never answers or calls it, for
+  a caller who keeps calling after the QSO is logged. Ignoring the station
+  being worked halts Tx and clears the DX call. The list shows under the
+  queue, is kept per profile, and right-click there (or the decode again)
+  removes a call. Stock JTDX's hidden version (Ctrl/Cmd + right-click
+  Clear DX) still works but lasts only until restart and shows nowhere.
+- **No repeat logging** (since the next release). A caller who missed your
+  RR73 keeps sending R+report, and each RR73 sent back used to log the QSO
+  again. Automatic logging now skips the same call, band and mode within
+  10 minutes; the Log QSO button still logs.
 - **AutoSeq calls only stations decoded right now** (since v0.6.0). JTDX
   could go back to a station that called your CQ up to 5 minutes ago and
   isn't heard any more; now every AutoSeq pick must be in the latest

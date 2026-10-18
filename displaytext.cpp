@@ -155,7 +155,8 @@ void DisplayText::mouseDoubleClickEvent(QMouseEvent *e)
 }
 
 // JTDX-VU: right-click a decode to queue its station for AutoSeq (called
-// the next time it is decoded), or take it off the queue
+// the next time it is decoded), or take it off the queue; or to ignore it
+// (AutoSeq never answers it)
 void DisplayText::contextMenuEvent (QContextMenuEvent * e)
 {
   QScopedPointer<QMenu> menu {createStandardContextMenu (e->pos ())};
@@ -168,6 +169,13 @@ void DisplayText::contextMenuEvent (QContextMenuEvent * e)
       auto * act = new QAction {in ? tr ("Remove %1 from queue").arg (call) : tr ("Queue %1 (call when next decoded)").arg (call), menu.data ()};
       connect (act, &QAction::triggered, this, [this, call] {emit queueToggled (call);});
       menu->insertAction (first, act);
+      if (ignored_)
+        {
+          bool const ign = ignored_->contains (call);
+          auto * ia = new QAction {ign ? tr ("Stop ignoring %1").arg (call) : tr ("Ignore %1 (never answer)").arg (call), menu.data ()};
+          connect (ia, &QAction::triggered, this, [this, call] {emit ignoreToggled (call);});
+          menu->insertAction (first, ia);
+        }
       menu->insertSeparator (first);
     }
   menu->exec (e->globalPos ());

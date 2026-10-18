@@ -3873,7 +3873,8 @@ void MainWindow::queueSetupUi ()
   auto * box = new QVBoxLayout {m_queueBox};
   box->setContentsMargins (0, 0, 0, 0);
   box->setSpacing (1);
-  box->addWidget (new QLabel {tr ("Queue (called when next decoded)")});
+  m_queueLabel = new QLabel {tr ("Queue (called when next decoded)")};
+  box->addWidget (m_queueLabel);
   m_queueList = new QListWidget;
   m_queueList->setMaximumHeight (fontMetrics ().height () * 4 + 6);
   m_queueList->setToolTip (tr ("Right-click a decode to queue or unqueue a station.\n"
@@ -3892,12 +3893,37 @@ void MainWindow::queueSetupUi ()
       menu.addAction (tr ("Clear queue"), this, [this] {m_queue.clear (); queueChanged ();});
       menu.exec (m_queueList->viewport ()->mapToGlobal (pos));
     });
+  // JTDX-VU: ignored stations - right-click a decode > Ignore; AutoSeq never
+  // answers them (for a caller who keeps calling after the QSO is logged)
+  m_ignored = m_settings->value ("JTDXVU/Ignored").toStringList ();
+  m_ignoreLabel = new QLabel {tr ("Ignored (never answered)")};
+  box->addWidget (m_ignoreLabel);
+  m_ignoreList = new QListWidget;
+  m_ignoreList->setMaximumHeight (fontMetrics ().height () * 3 + 6);
+  m_ignoreList->setToolTip (tr ("Right-click a decode to ignore a station or stop ignoring it.\n"
+                                "AutoSeq never answers or calls an ignored station; it is kept\n"
+                                "for this profile until removed.\n"
+                                "Right-click here to remove a call or clear the list."));
+  m_ignoreList->setContextMenuPolicy (Qt::CustomContextMenu);
+  box->addWidget (m_ignoreList);
+  connect (m_ignoreList, &QWidget::customContextMenuRequested, this, [this] (QPoint const& pos) {
+      QMenu menu;
+      if (auto * item = m_ignoreList->itemAt (pos)) {
+        auto const call = item->text ();
+        menu.addAction (tr ("Stop ignoring %1").arg (call), this, [this, call] {ignoreToggle (call);});
+      }
+      menu.addAction (tr ("Clear ignored"), this, [this] {m_ignored.clear (); queueChanged ();});
+      menu.exec (m_ignoreList->viewport ()->mapToGlobal (pos));
+    });
   int at = ui->verticalLayout_9->count ();
   for (int i = 0; i < ui->verticalLayout_9->count (); ++i)
     if (ui->verticalLayout_9->itemAt (i)->layout () == ui->verticalLayout) at = i;
   ui->verticalLayout_9->insertWidget (at, m_queueBox);
   for (auto * pane : {ui->decodedTextBrowser, ui->decodedTextBrowser2})
-    connect (pane, &DisplayText::queueToggled, this, &MainWindow::queueToggle);
+    {
+      connect (pane, &DisplayText::queueToggled, this, &MainWindow::queueToggle);
+      connect (pane, &DisplayText::ignoreToggled, this, &MainWindow::ignoreToggle);
+    }
   // right-click Halt Tx: stop calling a busy station and let the queue call it when it is free
   ui->stopTxButton->setContextMenuPolicy (Qt::CustomContextMenu);
   connect (ui->stopTxButton, &QWidget::customContextMenuRequested, this, [this] (QPoint const& pos) {
@@ -3934,15 +3960,43 @@ void MainWindow::queueToggle (QString const& call)
                                  : tr ("%1 queued - switch AutoSeq on to have it called").arg (call), 10000);
 }
 
+void MainWindow::ignoreToggle (QString const& call)
+{
+  if (m_ignored.contains (call)) m_ignored.removeAll (call);
+  else {
+    m_ignored << call;
+    m_queue.removeAll (call);   // ignoring outranks queueing
+    // stop answering him now, if he is the station being worked
+    if (!m_hisCall.isEmpty () && Radio::base_callsign (m_hisCall) == Radio::base_callsign (call)) {
+      if (m_transmitting || ui->enableTxButton->isChecked ()) haltTx ("halted, " + call + " ignored ");
+      clearDX (" cleared, " + call + " ignored");
+    }
+  }
+  queueChanged ();
+  showStatusMessage (m_ignored.contains (call) ? tr ("%1 ignored: AutoSeq will not answer it").arg (call)
+                                               : tr ("%1 no longer ignored").arg (call), 10000);
+}
+
 void MainWindow::queueChanged ()
 {
   m_qsoHistory.setQueue (m_queue);
+  m_qsoHistory.setIgnored (m_ignored);
+  m_settings->setValue ("JTDXVU/Ignored", m_ignored);
   if (!m_queueList) return;
   bool const jtty = m_mode == "JTTY";
-  for (auto * pane : {ui->decodedTextBrowser, ui->decodedTextBrowser2}) pane->queue_ = jtty ? nullptr : &m_queue;
+  for (auto * pane : {ui->decodedTextBrowser, ui->decodedTextBrowser2}) {
+    pane->queue_ = jtty ? nullptr : &m_queue;
+    pane->ignored_ = jtty ? nullptr : &m_ignored;
+  }
   m_queueList->clear ();
   m_queueList->addItems (m_queue);
-  m_queueBox->setVisible (!jtty && !m_queue.isEmpty ());
+  m_ignoreList->clear ();
+  m_ignoreList->addItems (m_ignored);
+  m_ignoreLabel->setVisible (!m_ignored.isEmpty ());
+  m_ignoreList->setVisible (!m_ignored.isEmpty ());
+  m_queueLabel->setVisible (!m_queue.isEmpty ());
+  m_queueList->setVisible (!m_queue.isEmpty ());
+  m_queueBox->setVisible (!jtty && (!m_queue.isEmpty () || !m_ignored.isEmpty ()));
 }
 
 void MainWindow::process_Auto()
@@ -6625,6 +6679,19 @@ void MainWindow::on_logQSOButton_clicked()
   if (qAbs(dateTimeQSOOff.toMSecsSinceEpoch() - m_dateTimeQSOOn.toMSecsSinceEpoch()) > int(m_TRperiod) * 10000) m_dateTimeQSOOn = dateTimeQSOOff;
   bool autolog = false;
   if(m_logqso73) autolog = m_config.autolog();
+  // JTDX-VU: a caller who missed our RR73 keeps sending R+report and each
+  // RR73 we send back would log the QSO again. Automatic logging skips a
+  // repeat of the last QSO (same call, band and mode within 10 minutes);
+  // the Log QSO button still logs.
+  if (autolog && m_mode != "JTTY" && m_lastloggedtime.isValid ()
+      && m_lastloggedtime.secsTo (currenttime) < 600
+      && m_lastLoggedKey == Radio::base_callsign (m_hisCall) + '|'
+           + m_config.bands ()->find (Radio::qo100_uplink (m_freqNominal)) + '|' + m_modeTx) {
+      showStatusMessage (tr ("%1 already logged: not logged again").arg (m_hisCall), 10000);
+      if (m_config.write_decoded_debug ()) writeToALLTXT ("QSO not logged again: " + m_hisCall);
+      m_logqso73=false;
+      return;
+  }
   distance=ui->labDist->text();
   if (m_mode == "JTTY") {
       // JTDX-VU: a keyboard (RTTY-style) mode logs RST, not FT8's dB report:
@@ -6688,6 +6755,7 @@ void MainWindow::acceptQSO2(QDateTime const& QSO_date_off, QString const& call, 
       Eqsl->upload(m_config.eqsl_username(),m_config.eqsl_passwd(),m_config.eqsl_nickname(),call,mode,QSO_date_on,rpt_sent,m_config.bands ()->find (log_freq),eqslcomments);
   ui->dxCallEntry->setStyleSheet(QString("QLineEdit {color: %1; background: %2}").arg(Radio::convert_dark("#000000",m_useDarkStyle),Radio::convert_dark("#7fff7f",m_useDarkStyle)));
   m_lastloggedcall=call;
+  m_lastLoggedKey = Radio::base_callsign (call) + '|' + m_config.bands ()->find (log_freq) + '|' + m_modeTx;
   if (queued (call)) {     // JTDX-VU: worked, off the queue
     auto const base = Radio::base_callsign (call);
     m_queue.erase (std::remove_if (m_queue.begin (), m_queue.end (), [&] (QString const& c) {return Radio::base_callsign (c) == base;}), m_queue.end ());
