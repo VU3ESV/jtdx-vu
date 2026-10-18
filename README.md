@@ -234,6 +234,18 @@ or Pi 5 is recommended.
   RR73 keeps sending R+report, and each RR73 sent back used to log the QSO
   again. Automatic logging now skips the same call, band and mode within
   10 minutes; the Log QSO button still logs.
+- **LoTW user marks work again** (since the next release, after JTDX
+  2.2.160). JTDX puts `•` before the country of a station that uploads to
+  Logbook of the World (`°` when the decode was also hinted, which alone is
+  `*`). The list bundled with JTDX 2.2.159 ends in February 2022, and only
+  uploads in the last 365 days count, so no station got the mark. JTDX-VU
+  bundles the October 2026 list, and Settings > General > **Logbook of the
+  World User Validation** (as in JTDX 2.2.160) has the list's URL with
+  **Fetch Now**, which downloads the latest list from ARRL (about 6 MB) and
+  uses it straight away, no restart; **Age of last upload less than** (365
+  days by default) and the date of the newest upload in the list ("lotw CSV
+  Version"). The fetched file is `lotw-user-activity.csv` in the data
+  directory. It is not fetched automatically: press Fetch Now now and then.
 - **AutoSeq calls only stations decoded right now** (since v0.6.0). JTDX
   could go back to a station that called your CQ up to 5 minutes ago and
   isn't heard any more; now every AutoSeq pick must be in the latest

@@ -23,7 +23,9 @@ class LogBook
 public:
     void init(const QString mycall,const QString mygrid,const QString mydate,
               // JTDX-VU: Club Log ADIF used as the worked-before source when set
-              const QString clublogFile = "", bool clublogConfirmedOnly = false, const QString clublogSince = "");
+              const QString clublogFile = "", bool clublogConfirmedOnly = false, const QString clublogSince = "",
+              // JTDX-VU: LoTW users count when their last upload is newer than this
+              int lotwDays = 365);
     void matchCQZ(/*in*/ const QString call,
               /*out*/ QString &countryName,
                       bool &WorkedBefore,
@@ -61,6 +63,7 @@ public:
                       const QString mode="");
     void getDXCC(/*in*/ const QString call,
               /*out*/ QString &countryName);
+    QString lotwVersion() const {return _countries.lotwVersion();} // JTDX-VU: newest date in the LoTW CSV
     void getLOTW(/*in*/ const QString call,
               /*out*/ QString &lotw);
     void addAsWorked(const QString call, const QString band, const QString mode, const QString date, const QString gridsquare, const QString name);
