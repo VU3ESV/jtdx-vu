@@ -77,8 +77,9 @@ jobs:
           tar xzf hamlib.tar.gz
           cd hamlib-4.7.2
           # precise_time.c calls assert() without <assert.h>; MSYS2's newer
-          # GCC makes an implicit declaration an error (2026-10-18)
-          CPPFLAGS="-include assert.h" ./configure --prefix=/mingw64 --disable-static --enable-shared --without-readline \
+          # GCC makes an implicit declaration an error (2026-10-18). CFLAGS, not
+          # CPPFLAGS: windres gets CPPFLAGS and rejects -include
+          CFLAGS="-g -O2 -include assert.h" ./configure --prefix=/mingw64 --disable-static --enable-shared --without-readline \
             --without-indi --without-cxx-binding --disable-winradio
           make -j 4
           make install
