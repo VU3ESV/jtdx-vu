@@ -279,6 +279,17 @@ Last updated: 2026-10-18
 
 ## What changed
 
+### 2026-10-18 — 0.7.6-rc1 (Windows) for KK4CDK: the four-copy TX audio test
+
+Manoj: "start the Windows build as an rc". `Versions.cmake` 0.7.5 -> 0.7.6-rc1 on
+branch `claude/beautiful-goldberg-4kaz34` (= `jtdx-vu` at `55935b0` + the Flex
+station TX stream change below). `windows.yml` started by hand on that branch
+(workflow_dispatch: the zip is a run artifact only, no tag, no release). Not yet
+published for Miguel: the rc3 way was a GitHub pre-release tag, which Manoj has
+to OK. Reply asking him to test drafted (outside the repo, to go in
+`~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-18.txt`), with a
+placeholder for the download link.
+
 ### 2026-10-18 — Flex copies 3 and 4 send on the station's DAX TX stream; "no DAX TX stream" warning (UNTESTED on a real radio, no release)
 
 Follow-up to KK4CDK's four-copy report (2026-10-17 entry, and his 2026-10-18 note
