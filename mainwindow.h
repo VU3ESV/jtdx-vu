@@ -701,6 +701,11 @@ private:
   QStringList m_queue;          // JTDX-VU: right-click queue, called by AutoSeq when next decoded
   QWidget * m_queueBox {nullptr};
   QListWidget * m_queueList {nullptr};
+  QStringList m_ignored;        // JTDX-VU: right-click > Ignore, never answered by AutoSeq (kept per profile)
+  QListWidget * m_ignoreList {nullptr};
+  QLabel * m_queueLabel {nullptr};
+  QLabel * m_ignoreLabel {nullptr};
+  QString m_lastLoggedKey;      // JTDX-VU: base call|band|mode of the last QSO logged
   QSlider * m_rxGainSlider {nullptr};   // JTDX-VU: RX gain
   int m_wantedShow {15};                // JTDX-VU: which wanted filters show (call 1, prefix 2, grid 4, country 8)
   QList<QAction *> m_wantedShowActions;
@@ -891,6 +896,7 @@ private:
   int watchdog_minutes () const;  // JTDX-VU: the Auto CQ time limit while Non-stop, else Settings
   void queueSetupUi ();        // JTDX-VU: the AutoSeq queue list by the Rx pane
   void queueToggle (QString const& call);
+  void ignoreToggle (QString const& call);   // JTDX-VU
   void queueChanged ();
   bool queued (QString const& call) const;
   void band_change_reset ();  // JTDX-VU: Auto CQ off on a new band (AnsB4 / 1 QSO stay)

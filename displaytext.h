@@ -39,6 +39,7 @@ signals:
     void selectCallsign(bool alt, bool ctrl);
     void leftClickReleased();     // JTDX-VU: JTTY picks a call on a single click
     void queueToggled (QString const& call);   // JTDX-VU: right-click > Queue / Unqueue
+    void ignoreToggled (QString const& call);  // JTDX-VU: right-click > Ignore / Stop ignoring
 
 public slots:
   void appendText(QString const& text, QString const& bg = "#ffffff", QString const& color = "#000000", int std_type = 0, QString const& servis = " ", QString const& servis_color = "#000000", QString const& cntry = " ", bool forceBold = false, bool strikethrough = false, bool underline = false, bool DXped = false, bool overwrite = false, bool wanted = false);
@@ -52,6 +53,7 @@ private:
     int newOnly_ = 0;
 public:
     QStringList const * queue_ = nullptr;   // JTDX-VU: the AutoSeq queue; null = no queue (JTTY)
+    QStringList const * ignored_ = nullptr; // JTDX-VU: calls AutoSeq never answers; null = none (JTTY)
 private:
     // JTDX-VU: per-line data kept on each decode's text block
     struct LineMeta : QTextBlockUserData

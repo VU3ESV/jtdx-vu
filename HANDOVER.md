@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-18
+Last updated: 2026-10-19
 
 ## Current state
 
@@ -278,6 +278,34 @@ Last updated: 2026-10-18
   `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-10-19 — Ignore a station; no repeat auto-logging (branch `feat/ignore-call`, for the next release)
+
+Manoj on QO-100 FT4: UT7QF missed our RR73 and sent `R+14` about 20 times;
+each RR73 JTDX-VU sent back logged the QSO again (3 entries, 18:29 / 18:31 /
+18:34 UTC). "need an option to blacklist a caller". Stock JTDX has a hidden
+one: Ctrl (Cmd on macOS) + right-click Clear DX calls
+`QsoHistory::blacklist` for the current DX call, cleared by
+`QsoHistory::init`, shown nowhere.
+- **Ignore:** right-click a decode > "Ignore CALL (never answer)" /
+  "Stop ignoring CALL" (`DisplayText::ignored_`, `ignoreToggled`).
+  `MainWindow::m_ignored`, kept in `[JTDXVU] Ignored` per profile, shown as
+  "Ignored (never answered)" under the queue list in `m_queueBox`
+  (right-click: Stop ignoring / Clear ignored). `QsoHistory::setIgnored`
+  fills `_ignored` (base calls); `black(key)` = `_blackdata` + ignored and
+  replaces the three `on_black` lookups in `autoseq`, so an ignored station is
+  never autoselected. Ignoring the current DX call halts Tx and clears DX;
+  ignoring takes the call off the queue.
+- **No repeat logging:** `on_logQSOButton_clicked` skips an automatic log
+  (`m_logqso73` + autolog) when base call | band | Tx mode equal
+  `m_lastLoggedKey` (set in `acceptQSO2`) within 600 s of
+  `m_lastloggedtime`; status message "CALL already logged: not logged
+  again". The Log QSO button and JTTY are unchanged.
+- **Tested:** `tools/autoseq_ignore_test.cpp` (4 checks; 3 fail on the
+  unmodified `qsohistory.cpp`, all pass now); `tools/qsoseq_test.cpp` still
+  passes; the app builds (worktree `~/projects/JTDX-ignore`). Not tried on
+  air or in the GUI yet. Built in a worktree because the TCI reconnect
+  session was editing the main checkout.
 
 ### 2026-10-18 — PSK Reporter: one program name per version (for the next build)
 
