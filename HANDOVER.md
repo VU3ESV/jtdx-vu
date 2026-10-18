@@ -279,6 +279,17 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-19 — 0.7.6-rc2: rc1 plus the TCI reconnect fix, Ignore CALL, no repeat logging (test build)
+
+Manoj: "merge and make rc2". `feat/ignore-call` merged into `jtdx-vu`
+(`2d8c9331`; only conflict: both new HANDOVER entries at the top, both kept).
+`Versions.cmake` 0.7.6-rc1 -> 0.7.6-rc2. rc2 = rc1 + the silent TCI TX audio
+after reconnect fix (`74a808de`) + Ignore CALL / no repeat auto-logging
+(entries below) + PSK Reporter "JTDX-VU v0.7.6" (`3deb9b25`). No Fortran
+changed since rc1. Local macOS build clean; `autoseq_ignore_test` and
+`qsoseq_test` pass on the merge. Published as GitHub pre-release
+`v0.7.6-rc2` (CI attaches the zips).
+
 ### 2026-10-19 — TCI: TX audio silent after an automatic reconnect (for the next build)
 
 Manoj lost transmit on QO-100 (Aether QO-100 profile, AetherSDR dev build ->
