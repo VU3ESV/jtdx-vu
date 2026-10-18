@@ -327,8 +327,9 @@ decides whether it ships.
   from our UDP port. If Miguel tries it, his `flex_trace.txt` for copy 3 shows
   which. Two copies keyed at once on one station share the stream (audio mixes),
   as stock JTDX copies do through the one sound device.
-- macOS build: not done in this session; `macos.yml` can be run on this branch by
-  hand (workflow_dispatch). No release.
+- macOS build: no Mac in this session; `macos.yml` started by hand on branch
+  `claude/beautiful-goldberg-4kaz34` (run 39084471352, workflow_dispatch: builds
+  only, attaches nothing). No release.
 
 ### 2026-10-18 — KK4CDK: Wanted Call beep silent; New only now keeps Wanted Calls (for the next release)
 
