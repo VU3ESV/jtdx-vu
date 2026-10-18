@@ -76,7 +76,9 @@ jobs:
           echo "ae1fcf2dbc80ea0786ea8f047b09399c3f7737d1930442f61a031708ed33e88f  hamlib.tar.gz" | sha256sum -c -
           tar xzf hamlib.tar.gz
           cd hamlib-4.7.2
-          ./configure --prefix=/mingw64 --disable-static --enable-shared --without-readline \
+          # precise_time.c calls assert() without <assert.h>; MSYS2's newer
+          # GCC makes an implicit declaration an error (2026-10-18)
+          CPPFLAGS="-include assert.h" ./configure --prefix=/mingw64 --disable-static --enable-shared --without-readline \
             --without-indi --without-cxx-binding --disable-winradio
           make -j 4
           make install
