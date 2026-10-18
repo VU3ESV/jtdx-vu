@@ -279,12 +279,16 @@ Last updated: 2026-10-18
 
 ## What changed
 
-### 2026-10-18 — 0.7.6-rc1 (Windows) for KK4CDK: the four-copy TX audio test
+### 2026-10-18 — 0.7.6-rc1 (Windows + macOS) for KK4CDK: the four-copy TX audio test
 
-Manoj: "start the Windows build as an rc". `Versions.cmake` 0.7.5 -> 0.7.6-rc1 on
-branch `claude/beautiful-goldberg-4kaz34` (= `jtdx-vu` at `55935b0` + the Flex
-station TX stream change below). `windows.yml` started by hand on that branch
-(workflow_dispatch: the zip is a run artifact only, no tag, no release). Not yet
+Manoj: "start the Windows build as an rc", then "build a rc1 for mac also".
+`Versions.cmake` 0.7.5 -> 0.7.6-rc1 on branch `claude/beautiful-goldberg-4kaz34`
+(= `jtdx-vu` at `55935b0` + the Flex station TX stream change below), `aacca6a`.
+Started by hand on that branch (workflow_dispatch: zips are run artifacts only,
+no tag, no release): Windows run 39084731852, macOS run 39084733509. The earlier
+macOS run 39084471352 (same code, still labelled 0.7.5) was cancelled. The Mac
+zips from a branch run are ad-hoc signed, not notarised (`macos-notarize.sh` is
+a Mac step). Not yet
 published for Miguel: the rc3 way was a GitHub pre-release tag, which Manoj has
 to OK. Reply asking him to test drafted (outside the repo, to go in
 `~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-18.txt`), with a
@@ -338,9 +342,7 @@ decides whether it ships.
   from our UDP port. If Miguel tries it, his `flex_trace.txt` for copy 3 shows
   which. Two copies keyed at once on one station share the stream (audio mixes),
   as stock JTDX copies do through the one sound device.
-- macOS build: no Mac in this session; `macos.yml` started by hand on branch
-  `claude/beautiful-goldberg-4kaz34` (run 39084471352, workflow_dispatch: builds
-  only, attaches nothing). No release.
+- macOS build: no Mac in this session; checked by the 0.7.6-rc1 CI run above. No release.
 
 ### 2026-10-18 — KK4CDK: Wanted Call beep silent; New only now keeps Wanted Calls (for the next release)
 
