@@ -1003,7 +1003,9 @@ int DisplayText::displayDecodedText(DecodedText* decodedText, QString myCall, QS
     meta.dialFreq = dialFreq;
     meta.mode = checkMode.isEmpty () ? app_mode : checkMode;
     meta.grid = grid.trimmed ();
-    meta.alwaysShow = std_type == 2 || jt65bc || bypassAllFilters || bypassRxfFilters
+    // A Wanted Call always shows (and beeps), as stock JTDX shows it
+    // even when worked before.
+    meta.alwaysShow = std_type == 2 || jt65bc || bypassAllFilters || bypassRxfFilters || bwantedCall
       || (!hisCall.isEmpty () && !checkCall.isEmpty () && checkCall.contains (hisCall));
     bool vu_hidden = newOnly_ > 0 && !meta.alwaysShow && !needed (logBook, meta);
     if (bypassAllFilters || bypassRxfFilters) {

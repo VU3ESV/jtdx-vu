@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-17
+Last updated: 2026-10-18
 
 ## Current state
 
@@ -278,6 +278,23 @@ Last updated: 2026-10-17
   `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-10-18 — KK4CDK: Wanted Call beep silent; New only now keeps Wanted Calls (for the next release)
+
+Miguel: the Wanted list's sound alarm doesn't work, and he found no setting
+for it. There is none in stock JTDX either: `displayDecodedText` beeps
+(`QApplication::beep()`, the OS alert sound, once per decode period) for
+every Wanted **Call** match; Wanted Prefix / Grid / Country beep only when
+the station is also "new" by Notifications (priority >= 5; the lower-priority
+beeps are commented out upstream). The JTDX-VU regression: the "New only"
+filter (`vu_hidden`) hid a worked-before Wanted Call, and a hidden line never
+beeps. Stock shows it (upstream `c3c4a4d0` "Don't hide B4 call when in wanted
+list"). `meta.alwaysShow` now includes `bwantedCall`. README New only item
+says so. Builds; not yet tried on air. Still open from the same mail: he says
+four stock JTDX rc10 copies on his Flex all send audio (stock uses the one
+DAX TX sound device, which every copy shares), against our 2026-10-17
+"Flex limitation" call - the idea of reusing the station's existing dax_tx
+stream when our create fails now looks like the real fix.
 
 ### 2026-10-17 — KK4CDK: four Flex copies, only two get TX audio (Flex limitation, no change)
 

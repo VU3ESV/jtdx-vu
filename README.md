@@ -191,7 +191,8 @@ or Pi 5 is recommended.
   prefix, call) is chosen once, there. It uses Club Log when enabled, turns
   amber while active, and is live: ticking it re-filters every decode
   already on screen, and a just-worked station drops out. Traffic with your
-  call and your QSO partner always shows, and the Rx Frequency pane is never
+  call, your QSO partner and a Wanted Call (worked before or not, so its
+  beep still sounds) always show, and the Rx Frequency pane is never
   filtered.
 - **Notifications page redesigned** (since v0.6.0): one row per kind of
   "new" in priority order, each with its band / mode checks, colour squares
