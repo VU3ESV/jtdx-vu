@@ -605,6 +605,7 @@ private:
   QString m_currentQSOcallsign;
   bool m_callPrioCQ;
   bool m_callFirst73;
+  QString m_dblClickCall;       // JTDX-VU: DX call picked by double-click: keep calling it even while it works others
   bool m_maxDistance;
   bool m_answerWorkedB4;
   bool m_callWorkedB4;

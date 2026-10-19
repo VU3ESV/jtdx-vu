@@ -223,6 +223,14 @@ or Pi 5 is recommended.
   and the station is queued, so AutoSeq calls it again when it sends CQ or
   RR73/73 to someone else (the latter needs Settings > Notifications
   "RR73/73" ticked).
+- **Double-click keeps calling a busy station** (since the next release).
+  A station you double-click is called whether or not he is still in a QSO,
+  as in WSJT-X and MSHV. JTDX used to halt Tx as soon as he answered
+  someone else (Settings > Sequencing "Halt TX if operator I called
+  answered to other operator", or with your Tx within his guard band), so
+  nothing called him when he finished; that halt now applies only to
+  stations AutoSeq picked. To wait instead of calling, queue him
+  (right-click > Queue CALL) (asked for by KK4CDK).
 - **Ignore a station** (since the next release). Right-click a decode >
   **Ignore CALL (never answer)**: AutoSeq never answers or calls it, for
   a caller who keeps calling after the QSO is logged. Ignoring the station

@@ -279,6 +279,22 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-20 — Double-click keeps calling a busy station (for the next build)
+
+KK4CDK: double-click a station still in a QSO, JTDX "holds the call but it
+doesn't resume after his QSO is finished". The halt at `readFromStdout`
+(`mainwindow.cpp` ~4533: DX sends a standard non-final message to someone
+else, Enable Tx on, and `halttxreplyother` or our Tx within `m_nguardfreq`)
+switched Enable Tx off and kept the DX call. Manoj: double-click must just
+call the station, in QSO or not, as in WSJT-X/JTDX/MSHV; the right-click
+queue is only an extra for waiting. (A first try that re-enabled Tx when he
+finished was discarded on Manoj's word.) Now `doubleClickOnCall` stores
+`m_dblClickCall = m_hisCall` after `processMessage`, and that halt skips a
+DX call equal (base call) to it; AutoSeq's picks still halt as before.
+Cleared on a logged QSO. It is the only halt of that kind. Builds; not
+tried on air. Reply drafted:
+`~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-20.txt`.
+
 ### 2026-10-19 — 0.7.6-rc4: rc3 plus the macOS exit-code-2 fix, the Flex DAX TX warning, TCI refused-frequency fix (test build)
 
 Manoj: yes to rc4 with the warning. `Versions.cmake` 0.7.6-rc3 -> rc4. rc4 =

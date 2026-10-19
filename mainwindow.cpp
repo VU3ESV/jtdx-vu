@@ -4530,7 +4530,10 @@ void MainWindow::readFromStdout()                             //readFromStdout
          }
       } else if (!deCall.isEmpty() && Radio::base_callsign (deCall) == Radio::base_callsign (m_hisCall) && decodedtextmsg.left(3) != "CQ " && decodedtextmsg.left(3) != "DE " && decodedtextmsg.left(4) != "QRZ " && !decodedtextmsg.contains(" 73") && !decodedtextmsg.contains(" RR73") && !decodedtextmsg.contains(" RRR")) {
         m_used_freq = decodedtext.frequencyOffset();
-         if (m_enableTx && !m_reply_me && !m_houndMode && (abs(m_used_freq - ui->TxFreqSpinBox->value ()) < m_nguardfreq || m_config.halttxreplyother ())) { 
+         // JTDX-VU: a station picked by double-click is called whether or not he
+         // is in a QSO, as in WSJT-X and MSHV (KK4CDK); the halt is for AutoSeq's picks
+         bool const picked = !m_dblClickCall.isEmpty () && Radio::base_callsign (m_dblClickCall) == Radio::base_callsign (m_hisCall);
+         if (m_enableTx && !m_reply_me && !m_houndMode && !picked && (abs(m_used_freq - ui->TxFreqSpinBox->value ()) < m_nguardfreq || m_config.halttxreplyother ())) { 
            haltTx("readFromStdout, not owner of the frequency or reply to other ");/* if(m_skipTx1) m_qsoHistory.remove(m_hisCall); */
          }
       }
@@ -5561,6 +5564,7 @@ void MainWindow::doubleClickOnCall(bool alt, bool ctrl)
   if(!m_decodedText2) messages = ui->decodedTextBrowser2->toPlainText();
   if(m_decodedText2) messages = ui->decodedTextBrowser->toPlainText();
   processMessage(messages, position, alt, ctrl);
+  m_dblClickCall = m_hisCall;   // JTDX-VU: an operator's pick (see the "reply to other" halt)
 }
 
 void MainWindow::doubleClickOnCall2(bool alt, bool ctrl)
@@ -6763,6 +6767,7 @@ void MainWindow::acceptQSO2(QDateTime const& QSO_date_off, QString const& call, 
       Eqsl->upload(m_config.eqsl_username(),m_config.eqsl_passwd(),m_config.eqsl_nickname(),call,mode,QSO_date_on,rpt_sent,m_config.bands ()->find (log_freq),eqslcomments);
   ui->dxCallEntry->setStyleSheet(QString("QLineEdit {color: %1; background: %2}").arg(Radio::convert_dark("#000000",m_useDarkStyle),Radio::convert_dark("#7fff7f",m_useDarkStyle)));
   m_lastloggedcall=call;
+  m_dblClickCall.clear ();
   m_lastLoggedKey = Radio::base_callsign (call) + '|' + m_config.bands ()->find (log_freq) + '|' + m_modeTx;
   if (queued (call)) {     // JTDX-VU: worked, off the queue
     auto const base = Radio::base_callsign (call);
