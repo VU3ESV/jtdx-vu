@@ -279,6 +279,14 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-19 — 0.7.6-rc4: rc3 plus the macOS exit-code-2 fix, the Flex DAX TX warning, TCI refused-frequency fix (test build)
+
+Manoj: yes to rc4 with the warning. `Versions.cmake` 0.7.6-rc3 -> rc4. rc4 =
+rc3 + `871a6379` (Fortran string lengths as size_t on macOS: the random
+quits) + `9b31adfb` (Flex copies 3-4 warning, TCI refused frequency). No
+Fortran source changed (the header and CMake did). Local macOS build clean.
+GitHub pre-release `v0.7.6-rc4`.
+
 ### 2026-10-19 — Flex copies 3-4: warn when the radio refuses DAX TX; TCI: a refused frequency no longer drops the link (for the next build)
 
 **KK4CDK's trace** (copy 3, rc1, FLEX-6700, `flex_trace.txt` 15:43:24 session):
