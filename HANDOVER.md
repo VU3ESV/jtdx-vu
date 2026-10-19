@@ -279,6 +279,13 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-20 — 0.7.6-rc5: rc4 plus double-click keeps calling a busy station (test build)
+
+Manoj: "build the changes". `Versions.cmake` 0.7.6-rc4 -> rc5. rc5 = rc4 +
+`333627d4` (double-click keeps calling, entry below) + `f0e6a69c` (README
+wording). No Fortran changed. Local macOS build clean. GitHub pre-release
+`v0.7.6-rc5`.
+
 ### 2026-10-20 — Double-click keeps calling a busy station (for the next build)
 
 KK4CDK: double-click a station still in a QSO, JTDX "holds the call but it
