@@ -46,13 +46,11 @@ extern "C"  {
 #	endif
 #endif
 
-  /* typedef for consistent gfortran ABI for charlen type hidden arguments */
-#if __GNUC__ > 7
-#ifdef __cplusplus
-#include <cstddef>
-#else
-#include <stddef.h>
-#endif
+  /* typedef for consistent gfortran ABI for charlen type hidden arguments.
+     JTDX-VU: set from the Fortran compiler (CMakeLists.txt); __GNUC__ is 4 under clang */
+#cmakedefine WSJT_FORTRAN_CHARLEN_SIZE_T 1
+#if defined(WSJT_FORTRAN_CHARLEN_SIZE_T) || (!defined(__clang__) && __GNUC__ > 7)
+#include <stddef.h>   /* not <cstddef>: this is inside extern "C", which libc++ rejects */
   typedef size_t fortran_charlen_t;
 #else
   typedef int fortran_charlen_t;

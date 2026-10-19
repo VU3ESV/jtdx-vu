@@ -279,6 +279,33 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-19 — macOS: JTDX-VU quitting by itself (exit code 2) fixed: Fortran string lengths passed as int (for the next build)
+
+The silent quits on 2026-10-18 (18:10:51, 18:12:36 UTC) and 2026-10-19
+~08:55 IST (after Manoj tried Fake It) were Fortran runtime errors. The
+rc3 copy started with `open --stderr ~/Desktop/jtdx-stderr.log` caught it:
+`At line 34 of file lib/azdist.f90: Substring out of bounds: upper bound (5)
+of 'hisgrid' exceeds string length (3)`. Both C++ calls pass 8-character
+grids, so the length itself was wrong.
+- **Cause:** `wsjtx_config.h.in` picked the type of gfortran's hidden
+  CHARACTER length arguments (`fortran_charlen_t`) with `#if __GNUC__ > 7`.
+  The C++ compiler on macOS is clang, which reports `__GNUC__` = 4, so every
+  macOS build declared them `int`, while gfortran 8+ reads `size_t`. On arm64
+  `azdist_`'s 10th and 11th arguments go on the stack; Apple packs two 4-byte
+  ints into one 8-byte slot, so Fortran read MyGrid's length right by luck and
+  HisGrid's from whatever was next on the stack. Mac-only: the Windows (MinGW)
+  and Linux builds use gcc and were already on `size_t`. Every macOS release
+  had it; it struck only when the stack garbage was below 5.
+- **Fix:** CMake sets `WSJT_FORTRAN_CHARLEN_SIZE_T` when the Fortran compiler
+  is GNU >= 8; the header uses it (gcc's `__GNUC__` test kept for others, not
+  for clang). The `size_t` branch included `<cstddef>` inside the header's
+  `extern "C"` block, which libc++ rejects; it now includes `<stddef.h>`.
+- **Proof:** scratch C++ -> Fortran call with 9 int pointers + 2 strings
+  (azdist's shape): declared `int`, Fortran saw len(HisGrid)=1830709712;
+  declared `size_t`, 8. App rebuilt clean. Not yet in a released build.
+- Also: when jtdx dies this way its `jtdxjt9` decoder is left running (it was
+  killed by hand before restarting).
+
 ### 2026-10-19 — 0.7.6-rc3: rc2 plus the LoTW users download (test build)
 
 Manoj: "merge lotw into jtdx-vu and make rc3" (rc2's macOS CI was still
@@ -4359,6 +4386,13 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
       through osascript.
 
 ## Known gotchas
+
+- **Fortran hidden string lengths are `size_t` (gfortran 8+).** Any new
+  `extern "C"` declaration of a Fortran routine with CHARACTER arguments
+  must use `fortran_charlen_t` for the hidden lengths, and that type comes
+  from CMake (`WSJT_FORTRAN_CHARLEN_SIZE_T`), not `__GNUC__` (clang says 4).
+  Getting it wrong on macOS gives random lengths and Fortran runtime errors
+  that quit the app with exit code 2 and no crash report (2026-10-19).
 
 - **UDP / logging route:** JTDX-VU → DXCA at `192.168.1.109:2334`
   (ubersdr) → raw passthrough → RUMlog on the Mac at `:2237`. If QSOs

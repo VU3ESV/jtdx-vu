@@ -1422,6 +1422,14 @@ add_dependencies(wsjt_qt revisiontag)
 #
 # versioning and configuration
 #
+# JTDX-VU: gfortran 8 and later pass the hidden CHARACTER length arguments
+# as size_t. The header used to decide this from __GNUC__, which clang
+# reports as 4, so macOS builds declared them int: the Fortran side then read
+# garbage lengths (a 3-character 'hisgrid' in azdist, a runtime error and an
+# exit with code 2). Decide from the Fortran compiler instead.
+if (CMAKE_Fortran_COMPILER_ID STREQUAL "GNU" AND CMAKE_Fortran_COMPILER_VERSION VERSION_GREATER_EQUAL 8)
+  set (WSJT_FORTRAN_CHARLEN_SIZE_T 1)
+endif ()
 configure_file (
   "${PROJECT_SOURCE_DIR}/wsjtx_config.h.in"
   "${PROJECT_BINARY_DIR}/wsjtx_config.h"
