@@ -279,6 +279,45 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-19 — Flex copies 3-4: warn when the radio refuses DAX TX; TCI: a refused frequency no longer drops the link (for the next build)
+
+**KK4CDK's trace** (copy 3, rc1, FLEX-6700, `flex_trace.txt` 15:43:24 session):
+joined GUI client 0x2b89b3f4 as non-GUI; `stream create type=dax_tx` was
+**granted** (`R16|0|84000003`, our own handle 0x422EF785), so rc1's fallback
+(runs only on refusal) never ran and no warning showed. The stream stays
+`tx=0`; other clients' dax_tx streams are never reported to us even with
+`sub dax all`; at key-up `dax audio set 4 tx=1` -> `R20|50001000` and
+`xmit 1` -> 0, so the radio keys with no audio. Only a station's own GUI
+client carries TX audio on his radio. Stock JTDX 2.2.160 does four copies
+because it goes through SmartSDR + DAX (one station, DAX mixes the copies).
+- `FlexTransceiver::do_ptt`: an `on_reply_` on that `dax audio set N tx=1`;
+  a non-zero code sets `tx_refused_`, traces "!! radio refused DAX TX for this
+  copy (0x...)" and republishes status: panel "radio refused DAX TX: no
+  transmit audio", `FlexStatus::tx_missing` -> main window status bar "FlexRadio:
+  the radio gives this copy no transmit audio (only the first two copies on a
+  FLEX can transmit)". Cleared on close. Not tried on a real radio.
+- Ideas left: copy 1 publishes its dax_tx id and copy 3 sends on it (unknown
+  whether the radio accepts it), or copies 3-4 hand audio to copy 1/2 over
+  localhost, DAX-style. Reply sent 2026-10-19
+  (`~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-19b.txt`): use
+  SmartSDR + DAX for all four copies; the coloured square before the country
+  is stock JTDX's "new" category colour; LoTW Fetch Now is in rc3.
+
+**TCI refused frequency** (Manoj, QO-100, Aether QO-100 profile): with Split =
+Fake It, Aether dropped JTDX-VU 0.2 s into every over. Aether's log: JTDX-VU
+sent `vfo:0,0,10489539757`, Aether answered `vfo:0,0,10489540000` (slice
+`lock:0,true` - AetherSDR mirrors the IC-705's dial lock, CI-V 16 50, onto
+the slice, `RadioModel.cpp` ~1204), and `TCITransceiver::do_frequency` set
+"TCI failed set rxfreq", which closes and reconnects. Manoj unlocked it with
+Aether's slice lock button and Fake It works. Now `vfo_answered_rx_` /
+`vfo_answered_other_` are set by the server's vfo reply; a mismatch with an
+answer (and no band change) is taken as the radio's frequency (qWarning, no
+error); no answer at all is still an error.
+- `tools/fake_tci.py` `FAKE_VFO_LOCK=1` (refuses vfo changes);
+  `tools/tci_vfolock_test.sh` (Fake It, Tx 2500 Hz, CQ for HOLD s): fixed
+  build 1 connect, 3 refusals, both overs complete (peak 0.999); rc3 the
+  first over cut 1 s in and a reconnect.
+
 ### 2026-10-19 — macOS: JTDX-VU quitting by itself (exit code 2) fixed: Fortran string lengths passed as int (for the next build)
 
 The silent quits on 2026-10-18 (18:10:51, 18:12:36 UTC) and 2026-10-19

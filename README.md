@@ -372,8 +372,15 @@ or Pi 5 is recommended.
   FLEX-6400 and Aurora 510 have 2 slices, 6600, 8600 and Aurora 520 have 4,
   6700 and 8800 have 8 (an M suffix changes nothing). Start the copies one
   after another, give every copy a different slice letter, and close them
-  with Quit so each removes the slice it made. Asked for by KK4CDK; worked on a
-  simulated radio, not yet on a real one. Connecting and
+  with Quit so each removes the slice it made. Asked for by KK4CDK.
+  **Only the first two copies can transmit:** on a real FLEX-6700 the third
+  and fourth copies receive and key PTT, but the radio refuses them transmit
+  audio (`dax audio set ... tx=1` -> `50001000`), so they would go out
+  silent; since the next build they say so on the status bar instead
+  ("the radio gives this copy no transmit audio"). To transmit from four
+  copies, run them all through SmartSDR and DAX with your usual CAT and DAX
+  sound devices, as stock JTDX does (DAX mixes the copies onto one station),
+  not as VITA-49 copies. Connecting and
   receiving work on a FLEX-6600; transmit is so far verified only against a
   software stand-in (`tools/flex_selftest.sh`). Each connection appends a
   trace to `flex_trace.txt` in the profile's data folder. If you copy a
@@ -396,6 +403,12 @@ or Pi 5 is recommended.
   (AetherSDR can, when its slice sits on the other TCI receiver), JTDX-VU asks
   for it instead of reconnecting every 5 s with "TCI sent an unrecognized
   frequency" (since v0.7.5).
+  If the SDR program refuses a frequency change and stays where it is
+  (AetherSDR with an IC-705's dial lock on), JTDX-VU carries on at that
+  frequency instead of dropping the link mid-over with "TCI failed set
+  rxfreq"; with Split = Fake It that used to happen on every over (fixed
+  for the next build). Unlock the dial (Aether's slice lock button sets the
+  IC-705's) for Fake It to work.
 - **Call Non-Stop:** the **Auto CQ** button in the right-hand button
   column, directly under Monitor in every mode (since v0.5.3), also "CNS" in the AutoSeq menu. After each logged QSO, JTDX-VU goes straight back to CQ
   or the next caller instead of halting Tx. Only QSOs from your own CQ

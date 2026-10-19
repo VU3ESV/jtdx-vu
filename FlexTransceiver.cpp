@@ -737,7 +737,7 @@ void FlexTransceiver::release (bool tell_radio)
       if (socket_) socket_->flush ();
     }
   rx_stream_ = tx_stream_ = 0;
-  tx_dax_ = tx_borrowed_ = false;
+  tx_dax_ = tx_borrowed_ = tx_refused_ = false;
   slice_ = -1;
   slice_created_ = false;
   PTT_ = false;
@@ -931,7 +931,19 @@ void FlexTransceiver::do_ptt (bool on)
       // DAX audio just before the key, so the radio has a little buffered
       // when xmit 1 lands (MSHV-Mac, measured)
       if (tx_dax_) tx_audio (true);
-      if (tx_dax_) send (QString ("dax audio set %1 tx=1").arg (dax_ch_));
+      if (tx_dax_)
+        {
+          // KK4CDK's FLEX-6700: a copy that joined another station is granted
+          // its own dax_tx stream (tx=0) but refused here (50001000), and the
+          // radio still keys - with no audio. Say so (status bar + panel).
+          int const dseq = send (QString ("dax audio set %1 tx=1").arg (dax_ch_));
+          on_reply_[dseq] = [this] (quint32 code) {
+            if (code == 0 || tx_refused_) return;
+            tx_refused_ = true;
+            trace (QString ("!! radio refused DAX TX for this copy (0x%1): PTT keys with no audio").arg (code, 0, 16));
+            publish_status ();
+          };
+        }
       send (QString ("slice set %1 tx=1").arg (slice_));
       int const seq = send ("xmit 1");
       if (!wait_reply (seq, 1000) || replies_[seq].first != 0) {error_ = tr ("Flex: failed to key (xmit)"); tx_audio (false); return;}
@@ -1150,7 +1162,8 @@ void FlexTransceiver::parse_meters (char const * buf, int len)
 void FlexTransceiver::publish_status ()
 {
   QString const line = QString ("Slice %1, DAX channel %2%3").arg (QChar ('A' + slice_letter_)).arg (dax_ch_)
-    .arg (tx_borrowed_ ? tr (", transmit on the station's DAX TX") : tx_dax_ ? tr (", transmit")
+    .arg (tx_refused_ ? tr (", radio refused DAX TX: no transmit audio")
+          : tx_borrowed_ ? tr (", transmit on the station's DAX TX") : tx_dax_ ? tr (", transmit")
           : tci_audio_ ? tr (", no DAX TX stream: no transmit audio") : tr (", receive only"));
   FlexShared::instance ().update ([&] (FlexStatus & st) {
       st.up = ready_ && connected_;
@@ -1158,7 +1171,7 @@ void FlexTransceiver::publish_status ()
       st.slice = slice_;
       st.dax_channel = dax_ch_;
       st.tx = tx_dax_;
-      st.tx_missing = tci_audio_ && !tx_dax_;
+      st.tx_missing = tci_audio_ && (!tx_dax_ || tx_refused_);
       st.frequency = qint64 (frequency_);
       if (!model_.isEmpty ()) st.model = model_;
     });

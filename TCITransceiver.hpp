@@ -270,6 +270,11 @@ private:
   unsigned int swr_;
   int level_;
   bool busy_rx_frequency_;
+  // JTDX-VU: the server answered our vfo command (with whatever frequency it
+  // kept). A refused change - e.g. AetherSDR with the IC-705's dial lock on -
+  // is then taken as the radio's frequency, not as a lost connection.
+  bool vfo_answered_rx_ {false};
+  bool vfo_answered_other_ {false};
   bool busy_mode_;  
   bool busy_other_frequency_;
   bool busy_split_;

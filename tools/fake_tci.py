@@ -12,7 +12,7 @@
 # FAKE_NO_VFO=1 leaves vfo:0,0 out of the start-up burst (AetherSDR, issue #1).
 # While trx is on it sends TxChrono and logs "TX over ... peak=" per over;
 # a file <log file>.drop drops the client (it should reconnect).
-import socket, hashlib, base64, threading, time, sys, struct
+import socket, hashlib, base64, threading, time, sys, struct, os
 G = b"258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 log = open(sys.argv[1], 'a', buffering=1)
 port = int(sys.argv[2]) if len(sys.argv) > 2 else 50099
@@ -58,6 +58,9 @@ def frames(c):
         if op == 1: yield data.decode()
         if op == 2: yield data              # binary: the client's TX audio
 
+# FAKE_VFO_LOCK=1 refuses every frequency change and answers with the frequency
+# it keeps, as AetherSDR does with an IC-705's dial lock on (2026-10-19).
+VFO_LOCK = bool(os.environ.get("FAKE_VFO_LOCK"))
 def reply(cmd):
     name, _, a = cmd.partition(":")
     args = a.split(",") if a else []
@@ -65,7 +68,7 @@ def reply(cmd):
     if k is None:
         return cmd + ";"                 # audio_start:0 etc. - acknowledge
     key = name + (":" + ",".join(args[:k]) if k else "")
-    if len(args) > k:
+    if len(args) > k and not (name == "vfo" and VFO_LOCK):
         state[key] = ",".join(args[k:])
     return key + ("," if k else ":") + state.get(key, "0") + ";"
 

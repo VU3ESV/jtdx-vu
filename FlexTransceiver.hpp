@@ -163,6 +163,7 @@ private:
   // JTDX-VU: a station has one DAX TX stream (KK4CDK, 2026-10-18). A copy that
   // joined a station and could not create its own sends on the station's
   bool tx_borrowed_ {false};         // tx_stream_ is the station's, not ours: never remove it
+  bool tx_refused_ {false};          // JTDX-VU: the radio refused "dax audio set N tx=1" (a joined copy on a FLEX-6700, KK4CDK)
   QMap<quint32, quint32> dax_tx_streams_;   // every dax_tx stream the radio reported -> its client handle
   QHash<quint32, QString> client_station_;  // client handle -> station= from its client status
   quint32 station_tx_stream () const;       // the joined station's dax_tx stream, 0 = none

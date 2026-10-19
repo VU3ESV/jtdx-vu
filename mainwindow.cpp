@@ -7952,7 +7952,7 @@ void MainWindow::handle_transceiver_update (Transceiver::TransceiverState const&
     auto const fs = FlexShared::instance ().snapshot ();
     bool const missing = fs.up && fs.tx_missing;
     if (missing && (!m_flexTxWarned || (s.ptt () && !m_flexTxWarnPtt)))
-      showStatusMessage (tr ("FlexRadio: no DAX TX stream for this copy - PTT keys the radio with no audio"), 30000);
+      showStatusMessage (tr ("FlexRadio: the radio gives this copy no transmit audio (only the first two copies on a FLEX can transmit) - PTT keys with no audio"), 30000);
     m_flexTxWarned = missing;
     m_flexTxWarnPtt = s.ptt ();
   }

@@ -658,6 +658,7 @@ void TCITransceiver::onMessageReceived(const QString &str)
 #endif
             if(args.at(0)==rx_ && args.at(1) == "0") {
               if (args.at(2).left(1) != "-") rx_frequency_ = args.at(2);
+              vfo_answered_rx_ = true;
               if (!tci_Ready && requested_rx_frequency_.isEmpty()) {requested_rx_frequency_ = rx_frequency_; }
               if (busy_rx_frequency_ && !band_change) {
 //                printf (" cmdvfo0 done1");
@@ -675,6 +676,7 @@ void TCITransceiver::onMessageReceived(const QString &str)
             }
             else if (args.at(0)==rx_ && args.at(1) == "1") {
               if (args.at(2).left(1) != "-") other_frequency_ = args.at(2);
+              vfo_answered_other_ = true;
 //              if (!tci_Ready && requested_other_frequency_.isEmpty()) requested_other_frequency_ = other_frequency_;
               if (band_change && tci_timer1_->isActive()) {
 //                printf (" cmdvfo1 done1");
@@ -1400,10 +1402,18 @@ void TCITransceiver::do_frequency (Frequency f, MODE m, bool no_ignore)
       busy_rx_frequency_ = true;
       band_change = abs(rx_frequency_.toInt()-requested_rx_frequency_.toInt()) > 1000000;
       const QString cmd = CmdVFO + SmDP + rx_ + SmCM + "0" + SmCM + requested_rx_frequency_ + SmTZ;
+      vfo_answered_rx_ = false;
       sendTextMessage(cmd);
       mysleep1(2000);
 //      if (band_change) mysleep1(500);
       if (requested_rx_frequency_ == rx_frequency_) update_rx_frequency (f);
+      else if (vfo_answered_rx_ && !band_change) {
+        // JTDX-VU: refused (dial lock, step, limits): carry on at the radio's
+        // frequency instead of dropping the connection mid-over
+        qWarning () << "TCI: rx frequency" << requested_rx_frequency_ << "refused, radio stays on" << rx_frequency_;
+        requested_rx_frequency_ = rx_frequency_;
+        update_rx_frequency (string_to_frequency (rx_frequency_));
+      }
       else {
 //        printf ("%s(%0.1f) TCI failed set rxfreq:%s->%s\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),rx_frequency_.toStdString().c_str(),requested_rx_frequency_.toStdString().c_str());
 #if JTDX_DEBUG_TO_FILE
@@ -1484,9 +1494,16 @@ void TCITransceiver::do_tx_frequency (Frequency tx, MODE mode, bool no_ignore)
           fclose (pFile);
 #endif
           const QString cmd = CmdVFO + SmDP + rx_ + SmCM + "1" + SmCM + requested_other_frequency_ + SmTZ;
+          vfo_answered_other_ = false;
           sendTextMessage(cmd);
           mysleep2(1000);
           if (requested_other_frequency_ == other_frequency_) update_other_frequency (tx);
+          else if (vfo_answered_other_) {
+            // JTDX-VU: refused - carry on at the radio's frequency (see the rx case)
+            qWarning () << "TCI: tx frequency" << requested_other_frequency_ << "refused, radio stays on" << other_frequency_;
+            requested_other_frequency_ = other_frequency_;
+            update_other_frequency (string_to_frequency (other_frequency_));
+          }
           else {
 //            printf ("%s(%0.1f) TCI failed set txfreq:%s->%s\n",m_jtdxtime->currentDateTimeUtc2().toString("hh:mm:ss.zzz").toStdString().c_str(),m_jtdxtime->GetOffset(),other_frequency_.toStdString().c_str(),requested_other_frequency_.toStdString().c_str());
 #if JTDX_DEBUG_TO_FILE
