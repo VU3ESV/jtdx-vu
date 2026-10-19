@@ -284,7 +284,18 @@ Last updated: 2026-10-19
 Manoj: "build the changes". `Versions.cmake` 0.7.6-rc4 -> rc5. rc5 = rc4 +
 `333627d4` (double-click keeps calling, entry below) + `f0e6a69c` (README
 wording). No Fortran changed. Local macOS build clean. GitHub pre-release
-`v0.7.6-rc5`.
+`v0.7.6-rc5` (tag CI green, 6 files). Miguel's reply (double-click keeps
+calling, Queue CALL as the extra, rc5 link) is in
+`~/projects/JTDX-records/jtdx-vu-reply-to-KK4CDK-2026-10-20.txt`, for Manoj
+to send.
+- **Installed on the Mac mini** 2026-10-20 01:31 IST from the arm64 zip
+  (sha256 OK, `ditto`, reports 0.7.6-rc5, `codesign --verify --deep --strict`
+  OK, binary identical to the zip; rc3 app in the Trash). Relaunched with
+  `open --stderr ~/Desktop/jtdx-stderr.log ... -r "Aether QO-100"`. Note:
+  `open --stderr` APPENDS, so the azdist error still in that file is the
+  2026-10-19 rc3 one; a new one would appear after the latest font line.
+  rc4 was never installed (superseded before the zip landed). All three rc5
+  zips are in `~/Desktop/jdxvu/test` for the MacBook (Manoj remote).
 
 ### 2026-10-20 — Double-click keeps calling a busy station (for the next build)
 
