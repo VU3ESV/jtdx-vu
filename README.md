@@ -229,8 +229,10 @@ or Pi 5 is recommended.
   someone else (Settings > Sequencing "Halt TX if operator I called
   answered to other operator", or with your Tx within his guard band), so
   nothing called him when he finished; that halt now applies only to
-  stations AutoSeq picked. To wait instead of calling, queue him
-  (right-click > Queue CALL) (asked for by KK4CDK).
+  stations AutoSeq picked. If you don't want to keep calling, the
+  right-click extras wait for you: right-click his decode > Queue CALL, or
+  right-click Halt Tx > Halt and queue CALL when already calling (asked
+  for by KK4CDK).
 - **Ignore a station** (since the next release). Right-click a decode >
   **Ignore CALL (never answer)**: AutoSeq never answers or calls it, for
   a caller who keeps calling after the QSO is logged. Ignoring the station
