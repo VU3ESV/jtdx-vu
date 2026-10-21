@@ -1,6 +1,6 @@
 # HANDOVER — JTDX-VU
 
-Last updated: 2026-10-19
+Last updated: 2026-10-22
 
 ## Current state
 
@@ -13,7 +13,10 @@ Last updated: 2026-10-19
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.5** (released 2026-10-17) (`JTDXVU_VERSION` in `Versions.cmake`),
+- **Version:** JTDX-VU **0.7.5** released 2026-10-17; **`Versions.cmake` is now 0.7.6-rc6**
+  (test build, GitHub pre-release 2026-10-22, installed on the Mac mini). rc1-rc6 are
+  unreleased work for v0.7.6 (see "What changed" 2026-10-18 .. 2026-10-22); Manoj calls the release.
+  Previous line, kept for history: JTDX-VU **0.7.5** (released 2026-10-17) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
   live Show filter and the Windows fixes; v0.2.1 makes CNS respect the
   AutoSeq give-up counters again; v0.3.0 adds JTTY and FT2; v0.4.0 adds
@@ -4238,6 +4241,20 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 - The dialog renders, and a macOS notification arrives.
 
 ## Open items
+
+- [ ] **v0.7.6 (2026-10-22):** rc6 is the current test build. Waiting on KK4CDK to
+      try rc5/rc6 (double-click keeps calling, LoTW Fetch Now). Manoj to try on air:
+      India crossband (Misc menu, needs Split), Background highlight off on Tx lines
+      and the marker cell, Ignore CALL, no repeat logging, TCI reconnect / refused
+      frequency fixes. Release when Manoj says.
+- [ ] **Flex copies 3-4 in VITA-49 mode have no TX audio** on a real FLEX-6700
+      (KK4CDK trace: own dax_tx stream stays tx=0). rc6 warns ("no TX audio"). Ideas
+      not built: copy 3 sends on copy 1's stream id (unknown if the radio accepts it),
+      or copies 3-4 relay audio to copy 1/2 over localhost, DAX-style. Miguel is fine
+      with the limit for now (2026-10-20); SmartSDR+DAX works for four copies.
+- [ ] **AetherSDR (dev build, local/dev-build):** its ~1.2 s main-thread stalls overflow
+      the TCI RX audio backlog and drop the client (seen 2026-10-18 23:25 / 23:59).
+      JTDX-VU now recovers; the stall itself is not reported upstream yet.
 
 - [ ] **Issue #6 fix** (2026-10-15): unit test 5/5 and **passed in the app on
       fake TCI** (old code reproduces #6, fixed code keeps the report). Reply on
