@@ -227,6 +227,14 @@ or Pi 5 is recommended.
   and the station is queued, so AutoSeq calls it again when it sends CQ or
   RR73/73 to someone else (the latter needs Settings > Notifications
   "RR73/73" ticked).
+- **160m crossband with India** (since the next release): **Misc >
+  Crossband 160m operation with India**, beside stock JTDX's Japan and
+  Korea options. On FT8, a station outside India on dial **1.808**
+  transmits on **1.840**, and an Indian station (VU, VU4, VU7) on dial
+  **1.840** transmits on **1.808**, audio offset on top. Needs Split
+  operation (Rig or Fake It). 1.808 FT8 is in the default frequency list;
+  an existing profile needs it added in Settings > Frequencies, or type
+  1.808 in the band box.
 - **Double-click keeps calling a busy station** (since the next release).
   A station you double-click is called whether or not he is still in a QSO,
   as in WSJT-X and MSHV. JTDX used to halt Tx as soon as he answered

@@ -1584,6 +1584,7 @@ void MainWindow::writeSettings()
   m_settings->setValue("CallsignToClipboard",m_callToClipboard);
   m_settings->setValue("Crossband160mJA",m_crossbandOptionEnabled);
   m_settings->setValue("Crossband160mHL",m_crossbandHLOptionEnabled);
+  m_settings->setValue("Crossband160mVU",m_crossbandVUOptionEnabled);
   m_settings->setValue("QuickCall",m_autoTx);
   m_settings->setValue("AutoSequence",m_autoseq);
   m_settings->setValue("SpotText",m_spotText);
@@ -1893,6 +1894,8 @@ void MainWindow::readSettings()
 
   m_crossbandHLOptionEnabled=m_settings->value("Crossband160mHL",true).toBool();
   ui->actionCrossband_160m_HL->setChecked(m_crossbandHLOptionEnabled);
+  m_crossbandVUOptionEnabled=m_settings->value("Crossband160mVU",false).toBool();
+  ui->actionCrossband_160m_VU->setChecked(m_crossbandVUOptionEnabled);
 
   m_autoTx=m_settings->value("QuickCall",true).toBool();
   ui->AutoTxButton->setChecked(m_autoTx);
@@ -3526,6 +3529,7 @@ void MainWindow::on_actionColor_Tx_message_buttons_toggled(bool checked) { m_col
 void MainWindow::on_actionCallsign_to_clipboard_toggled(bool checked) { m_callToClipboard = checked; }
 void MainWindow::on_actionCrossband_160m_JA_toggled(bool checked) { m_crossbandOptionEnabled = checked; }
 void MainWindow::on_actionCrossband_160m_HL_toggled(bool checked) { m_crossbandHLOptionEnabled = checked; }
+void MainWindow::on_actionCrossband_160m_VU_toggled(bool checked) { m_crossbandVUOptionEnabled = checked; }
 
 void MainWindow::on_actionShow_messages_decoded_from_harmonics_toggled(bool checked)
 {
@@ -7845,9 +7849,14 @@ void MainWindow::setXIT(int n, Frequency base)
           if (m_crossbandOptionEnabled && m_m_prefix != "JA") m_freqTxNominal -= 68000;
         } else if (base == 1810000) {
           if (m_crossbandHLOptionEnabled && m_m_prefix != "HL") m_freqTxNominal += 30000;
+        } else if (base == 1808000) {
+          // JTDX-VU: crossband with India - the DX listens to VU on 1808, sends on 1840
+          if (m_crossbandVUOptionEnabled && !m_m_prefix.startsWith ("VU")) m_freqTxNominal += 32000;
         } else if (base == 1840000) {
           if (m_crossbandOptionEnabled && m_m_prefix == "JA") m_freqTxNominal += 68000;
           if (m_crossbandHLOptionEnabled && m_m_prefix == "HL") m_freqTxNominal -= 30000;
+          // JTDX-VU: and VU (VU, VU4, VU7) listens on 1840, sends on 1808
+          if (m_crossbandVUOptionEnabled && m_m_prefix.startsWith ("VU")) m_freqTxNominal -= 32000;
         }
         Q_EMIT m_config.transceiver_tx_frequency (m_freqTxNominal);
 	}

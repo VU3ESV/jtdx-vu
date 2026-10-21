@@ -279,6 +279,21 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-22 — 160m crossband with India (for the next build)
+
+Manoj: "add a crossband op option with India. Rx 1808/Tx 1840, if op call is
+VU then inverted, only for 160m". Stock JTDX already has Misc > Crossband
+160m operation with Japan (1908/1840, 68 kHz) and Korea (1810/1840, 30 kHz)
+in `MainWindow` (~7843, where Fake It / Rig split sets `m_freqTxNominal`).
+Added `actionCrossband_160m_VU` ("...with India", tooltip), setting
+`[Common] Crossband160mVU` (default off), `m_crossbandVUOptionEnabled`:
+base 1808000 and my cty prefix not VU* -> Tx +32000 (1840); base 1840000 and
+prefix VU* (VU, VU4, VU7) -> Tx -32000 (1808). `FrequencyList.cpp` default
+list gains 1808000 FT8 (ALL regions); existing profiles keep their list.
+- **Tested:** `tools/crossband_vu_test.sh` (fake TCI, Fake It, push the dial,
+  one CQ): VU2CPL on 1.840 sent `vfo:0,0,1808000` for the over and back to
+  1840000; K1ABC on 1.808 sent 1840000 and back to 1808000.
+
 ### 2026-10-22 — Background highlight off now means no background anywhere (for the next build)
 
 Manoj: "how to remove background highlight for my call? ... or for anything

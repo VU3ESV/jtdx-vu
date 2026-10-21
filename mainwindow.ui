@@ -4814,6 +4814,7 @@ list. The list can be maintained in Settings (F2).</string>
     <addaction name="separator"/>
     <addaction name="actionCrossband_160m_JA"/>
     <addaction name="actionCrossband_160m_HL"/>
+    <addaction name="actionCrossband_160m_VU"/>
    </widget>
    <widget class="QMenu" name="menuAutoSeq">
     <property name="title">
@@ -6048,6 +6049,17 @@ list. The list can be maintained in Settings (F2).</string>
    </property>
    <property name="text">
     <string>Crossband 160m operation with Korea</string>
+   </property>
+  </action>
+  <action name="actionCrossband_160m_VU">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Crossband 160m operation with India</string>
+   </property>
+   <property name="toolTip">
+    <string>FT8 on 160m: India listens on 1.840 and transmits on 1.808, everyone else listens on 1.808 and transmits on 1.840. Needs Split operation (Rig or Fake It).</string>
    </property>
   </action>
   <action name="actionDecFT8cycles1">
