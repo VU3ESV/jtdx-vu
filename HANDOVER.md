@@ -286,7 +286,15 @@ Manoj: "make rc6". `Versions.cmake` 0.7.6-rc5 -> rc6. rc6 = rc5 + `2f98b9f0`
 radio) + `a4204703`/`2f7c32a3` (Flex panel: old layout, short status texts) +
 `fc4c49bb` (Background highlight off covers Tx lines, QSY lines, the marker
 cell) + `7f49d3d1` (Misc > Crossband 160m operation with India). No Fortran
-changed. Local macOS build clean. GitHub pre-release `v0.7.6-rc6`.
+changed. Local macOS build clean. GitHub pre-release `v0.7.6-rc6` (tag CI
+green, 6 files; all three zips in `~/Desktop/jdxvu/test` for the MacBook).
+- **Installed on the Mac mini** 2026-10-22 ~02:03 IST: arm64 zip sha256 OK,
+  reports 0.7.6-rc6, codesign OK, binary identical; rc5 app in the Trash. The
+  running copy was the FLEX VITA49 profile (plain launch, `Profiles/Last`); it
+  was quit after the over ended (`xmit 0` in `flex_trace.txt`) and relaunched
+  the same way with `open --stderr ~/Desktop/jtdx-stderr.log`. New Flex
+  session: own dax_tx stream `tx=1`, no "no TX audio" warning (the rc4/rc5
+  false alarm is gone on this radio).
 
 ### 2026-10-22 — 160m crossband with India (for the next build)
 
