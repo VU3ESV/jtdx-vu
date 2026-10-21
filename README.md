@@ -384,8 +384,8 @@ or Pi 5 is recommended.
   after another, give every copy a different slice letter, and close them
   with Quit so each removes the slice it made. Asked for by KK4CDK.
   **Only the first two copies can transmit:** on a real FLEX-6700 the third
-  and fourth copies receive and key PTT, but the radio refuses them transmit
-  audio (`dax audio set ... tx=1` -> `50001000`), so they would go out
+  and fourth copies receive and key PTT, but the radio takes no transmit
+  audio from them (their DAX TX stream stays `tx=0`), so they would go out
   silent; since the next build they say so on the status bar instead
   ("the radio gives this copy no transmit audio"). To transmit from four
   copies, run them all through SmartSDR and DAX with your usual CAT and DAX

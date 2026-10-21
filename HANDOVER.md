@@ -279,6 +279,23 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-22 — Flex "refused DAX TX" warning was a false alarm on a working radio; now from the stream's tx= flag (for the next build)
+
+Manoj (FLEX-6600, one copy, Slice A, rc5): the Flex panel said "radio refused
+DAX TX: no transmit audio" while the radio was transmitting normally. His
+`flex_trace.txt` (FLEX VITA49 profile, 2026-10-21 18:44): `dax audio set 1
+tx=1` at every key-up answers `R|50001000|` on his working radio too, so the
+rc4 check (`on_reply_` on that command, `9b31adfb`) was wrong - and so was the
+2026-10-19 reading of KK4CDK's trace that blamed that reply. The real
+difference: our own dax_tx stream status reads **`tx=1`** on Manoj's radio and
+stayed **`tx=0`** on Miguel's joined copy 3. Now `parse_status` sets
+`tx_refused_` from `\btx=0\b` on our own (not borrowed) TX stream once
+`ready_`, traces the change, and republishes (panel "radio takes no DAX TX
+from this copy: no transmit audio", the same status-bar warning). The key-up
+`on_reply_` is gone. `tools/fake_flex.py` reports tx=1, so its self-tests stay
+quiet. Builds; checked against both real traces by reading, not run on a
+radio.
+
 ### 2026-10-20 — 0.7.6-rc5: rc4 plus double-click keeps calling a busy station (test build)
 
 Manoj: "build the changes". `Versions.cmake` 0.7.6-rc4 -> rc5. rc5 = rc4 +

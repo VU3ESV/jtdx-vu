@@ -368,6 +368,22 @@ void FlexTransceiver::handle_line (QString const& line)
   QRegularExpression const ch {"\\bclient_handle=0x([0-9a-f]+)"};
   auto const hm = ch.match (low);
   dax_tx_streams_[sid] = hm.hasMatch () ? hm.captured (1).toUInt (nullptr, 16) : 0;
+  // JTDX-VU: our own TX stream's "tx=" says whether the radio takes its audio.
+  // A copy that joined another station (KK4CDK's third copy, FLEX-6700) was
+  // granted a stream that stayed tx=0, and the radio keyed with no audio; a
+  // working copy reports tx=1. (The 50001000 reply to "dax audio set N tx=1"
+  // at key-up comes on working radios too, so it says nothing.)
+  if (ready_ && sid == tx_stream_ && !tx_borrowed_)
+    {
+      bool const off = QRegularExpression {"\\btx=0\\b"}.match (low).hasMatch ();
+      if (off != tx_refused_)
+        {
+          tx_refused_ = off;
+          trace (off ? QString ("!! our DAX TX stream 0x%1 is tx=0: the radio takes no transmit audio from this copy").arg (sid, 0, 16)
+                     : QString ("our DAX TX stream 0x%1 is tx=1 again").arg (sid, 0, 16));
+          publish_status ();
+        }
+    }
   // a copy that started with no TX stream picks up one its station brings
   // up later (the station's GUI client reconnecting)
   if (ready_ && tci_audio_ && bound_handle_ && !tx_stream_ && (tx_stream_ = station_tx_stream ()))
@@ -931,19 +947,7 @@ void FlexTransceiver::do_ptt (bool on)
       // DAX audio just before the key, so the radio has a little buffered
       // when xmit 1 lands (MSHV-Mac, measured)
       if (tx_dax_) tx_audio (true);
-      if (tx_dax_)
-        {
-          // KK4CDK's FLEX-6700: a copy that joined another station is granted
-          // its own dax_tx stream (tx=0) but refused here (50001000), and the
-          // radio still keys - with no audio. Say so (status bar + panel).
-          int const dseq = send (QString ("dax audio set %1 tx=1").arg (dax_ch_));
-          on_reply_[dseq] = [this] (quint32 code) {
-            if (code == 0 || tx_refused_) return;
-            tx_refused_ = true;
-            trace (QString ("!! radio refused DAX TX for this copy (0x%1): PTT keys with no audio").arg (code, 0, 16));
-            publish_status ();
-          };
-        }
+      if (tx_dax_) send (QString ("dax audio set %1 tx=1").arg (dax_ch_));
       send (QString ("slice set %1 tx=1").arg (slice_));
       int const seq = send ("xmit 1");
       if (!wait_reply (seq, 1000) || replies_[seq].first != 0) {error_ = tr ("Flex: failed to key (xmit)"); tx_audio (false); return;}
@@ -1162,7 +1166,7 @@ void FlexTransceiver::parse_meters (char const * buf, int len)
 void FlexTransceiver::publish_status ()
 {
   QString const line = QString ("Slice %1, DAX channel %2%3").arg (QChar ('A' + slice_letter_)).arg (dax_ch_)
-    .arg (tx_refused_ ? tr (", radio refused DAX TX: no transmit audio")
+    .arg (tx_refused_ ? tr (", radio takes no DAX TX from this copy: no transmit audio")
           : tx_borrowed_ ? tr (", transmit on the station's DAX TX") : tx_dax_ ? tr (", transmit")
           : tci_audio_ ? tr (", no DAX TX stream: no transmit audio") : tr (", receive only"));
   FlexShared::instance ().update ([&] (FlexStatus & st) {
