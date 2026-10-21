@@ -815,6 +815,7 @@ int FlexTransceiver::do_start (JTDXDateTime * jtdxtime)
       throw error {error_.isEmpty () ? tr ("Flex: could not be opened") : error_};
     }
   ready_ = true;
+  key_failures_ = 0;
   last_rx_audio_ms_ = QDateTime::currentMSecsSinceEpoch ();
   if (!cmd_timer_)
     {
@@ -950,7 +951,21 @@ void FlexTransceiver::do_ptt (bool on)
       if (tx_dax_) send (QString ("dax audio set %1 tx=1").arg (dax_ch_));
       send (QString ("slice set %1 tx=1").arg (slice_));
       int const seq = send ("xmit 1");
-      if (!wait_reply (seq, 1000) || replies_[seq].first != 0) {error_ = tr ("Flex: failed to key (xmit)"); tx_audio (false); return;}
+      // A key-up the radio is slow to confirm is not a lost link: the 6600
+      // once took over 1 s (2026-10-21), the old 1 s limit dropped the
+      // connection, and the reconnect came up on the default 14.100 slice and
+      // sent CQ there. Unkey, skip this over (the main window keys again next
+      // cycle); only three misses in a row count as a failure and reconnect.
+      if (!wait_reply (seq, 3000) || replies_[seq].first != 0)
+        {
+          trace (QString ("!! xmit 1 not confirmed (code 0x%1), miss %2 - unkeying, next cycle").arg (replies_.value (seq).first, 0, 16).arg (key_failures_ + 1));
+          send ("xmit 0");
+          tx_audio (false);
+          if (++key_failures_ >= 3) {key_failures_ = 0; error_ = tr ("Flex: failed to key (xmit)");}
+          update_PTT (false);
+          return;
+        }
+      key_failures_ = 0;
       PTT_ = true;
     }
   else

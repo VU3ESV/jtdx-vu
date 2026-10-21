@@ -4827,6 +4827,18 @@ void MainWindow::guiUpdate()
     // ahead and send only the tail of the message, which nobody decodes; wait
     // for the next Tx period instead. JTTY (period-free) and WSPR keep the old rule.
     bool lateStartOk = fTR<0.2 || m_mode=="JTTY" || m_mode.startsWith("WSPR");
+    // JTDX-VU: a FlexRadio key-up the radio did not confirm is dropped by
+    // FlexTransceiver without a PTT; halfway through the period, give up this
+    // over and leave Tx enabled, so the next cycle keys again
+    if (g_iptt==1 && m_tx_when_ready && !m_transmitting && !m_tune && !m_rigState.ptt ()
+        && fTR>=0.5 && m_mode!="JTTY" && !m_mode.startsWith("WSPR")
+        && m_config.rig_name ().startsWith ("FlexRadio VITA")) {
+      g_iptt = 0;
+      m_tx_when_ready = false;
+      Q_EMIT m_config.transceiver_ptt (false);
+      showStatusMessage (tr ("FlexRadio did not key - trying again next cycle"), 15000);
+      if(m_config.write_decoded_debug()) writeToALLTXT("FlexRadio key-up not confirmed, skipping this Tx period");
+    }
     if(g_iptt==0 and ((m_bTxTime and lateStartOk) or m_tune )) {   //### Allow late starts
       icw[0]=m_ncw;
       g_iptt = 1;
@@ -8125,6 +8137,11 @@ void MainWindow::handle_transceiver_failure (QString const& reason)
   m_rigOk=false;
   ui->readFreq->setEnabled (true);
   haltTx("Rig control error: " + reason + " ");
+  // JTDX-VU: the failure closes the rig without an offline update, so the
+  // reconnect looked like a rig already online and the Flex restore (back to
+  // the frequency we were on) was skipped: JTDX-VU followed the new connection's
+  // default 14.100 slice and kept calling CQ there (2026-10-21, twice)
+  if (m_config.rig_name ().startsWith ("FlexRadio VITA")) m_rigState.online (false);
   bool const flex_audio_seen = m_flexAudioSeen;   // JTDX-VU: on the connection that just failed
   m_flexAudioSeen = false;
   // JTDX-VU: TCI - keep retrying quietly instead of the Rig Control Error

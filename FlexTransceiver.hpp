@@ -133,6 +133,7 @@ private:
   QList<QEventLoop *> loops_;         // every wait in progress, innermost last
   void wake ();                       // end every wait so it re-checks its condition
   int nested_waits_ {0};
+  int key_failures_ {0};   // key-ups in a row the radio did not confirm
   // what JTDX-VU asked for that is not on the radio yet: set while connecting
   // or while another command is in progress, applied as soon as possible
   Frequency pending_frequency_ {0};

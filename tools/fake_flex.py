@@ -44,7 +44,7 @@ OUI = 0x00001C2D
 RX_CLASS, TX_CLASS = 0x534C03E3, 0x534C0123
 log = None
 lock = threading.Lock()
-state = {"clients": {}, "next_handle": HANDLE, "slices": {}, "next_slice": 0, "xmit": 0,
+state = {"clients": {}, "next_handle": HANDLE, "slices": {}, "next_slice": 0, "xmit": 0, "xmit_missed": 0,
          "tx": {"rfpower": 50, "tunepower": 10, "max_power_level": 100, "hwalc_enabled": 0},
          "atu": {"status": "TUNE_BYPASS", "atu_enabled": 1, "memories_enabled": 0, "using_mem": 0}}
 # meters: id -> (src, num, name, unit) - what the panel and the S-meter read
@@ -229,6 +229,10 @@ def serve(c, a):
                             cl["tx_stream"] = 0
                             if STATION_TX: extra.append("stream 0x%08X removed" % sid)
                     elif p[0] == "xmit":
+                        # FAKE_XMIT_MISS=N: the first N key-ups are never answered and do not
+                        # key (the 6600 left one unanswered for over 1 s, 2026-10-21)
+                        if int(p[1]) and state["xmit_missed"] < int(os.environ.get("FAKE_XMIT_MISS", "0")):
+                            state["xmit_missed"] += 1; logw("< %s  [0x%08X]  (not answered, miss %d)" % (cmd, h, state["xmit_missed"])); continue
                         state["xmit"] = int(p[1]); extra.append("interlock state=%s" % ("TRANSMITTING" if state["xmit"] else "READY"))
                 logw("< %s  [0x%08X]" % (cmd, h))
                 c.sendall(("R%s|%s|%s\n" % (seq, code, body)).encode())

@@ -374,7 +374,10 @@ or Pi 5 is recommended.
   why (usually the firewall), and clicking the red ERR box reconnects. Audio
   that was flowing and then stops (a VPN or network drop) is not a firewall:
   it keeps retrying until the link is back, and goes back to the frequency
-  you were on (both since v0.7.5). One
+  you were on (both since v0.7.5). A key-up the radio is slow to confirm
+  (over 3 s) skips just that over and keys again next cycle; only three in a
+  row reconnect, and any reconnect goes back to your frequency instead of the
+  radio's default 14.100 slice (since v0.7.6). One
   API session, so the radio's relays click once per over. Ported from the
   MSHV-Mac backend. No split: use Fake It or None. The TX slider is the
   radio's RF power (it follows the radio, which keeps power per band; while

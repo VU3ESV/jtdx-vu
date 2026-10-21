@@ -13,8 +13,9 @@ Last updated: 2026-10-22
   release v0.1.0–v0.7.0 is on GitHub with its files. Correspondence, QSO files and other people's
   recordings live in `~/projects/JTDX-records/` (outside this public repo, with a README), not in
   `~/Downloads`.
-- **Version:** JTDX-VU **0.7.5** released 2026-10-17; **`Versions.cmake` is now 0.7.6-rc6**
-  (test build, GitHub pre-release 2026-10-22, installed on the Mac mini). rc1-rc6 are
+- **Version:** JTDX-VU **0.7.5** released 2026-10-17; **`Versions.cmake` is now 0.7.6-rc7**
+  (local test build 2026-10-22: rc6 plus the Flex key-up / reconnect fix; rc6 is the
+  last GitHub pre-release and is installed on the Mac mini). rc1-rc7 are
   unreleased work for v0.7.6 (see "What changed" 2026-10-18 .. 2026-10-22); Manoj calls the release.
   Previous line, kept for history: JTDX-VU **0.7.5** (released 2026-10-17) (`JTDXVU_VERSION` in `Versions.cmake`),
   on JTDX 2.2.159. v0.1.0 was the first release; v0.2.0 adds CNS, the
@@ -281,6 +282,39 @@ Last updated: 2026-10-22
   `spctl -a -vv -t exec` → "Notarized Developer ID".
 
 ## What changed
+
+### 2026-10-22 — 0.7.6-rc7: Flex key-up miss no longer QSYs to 14.100 and calls CQ there
+
+On air with the FLEX-6600 on 30m, rc5 and rc6 jumped to **14.100** three times
+(2026-10-21 18:42, 21:54 and 22:05 UTC) and, with Tx on, sent CQ there (the
+radio reported TRANSMITTING; 14.100 is the NCDXF beacon frequency). The
+`flex_trace.txt` showed the chain each time: `xmit 1` not answered within 1 s ->
+`failed to key (xmit)` -> rig failure -> TCI-style reconnect 5 s later -> the new
+GUI client is handed a fresh slice at 14.100 USB -> JTDX-VU followed it.
+The restore in `handle_transceiver_update` ("start on the last frequency", only
+on an offline -> online transition) never ran: `Configuration::handle_transceiver_failure`
+closes the rig without sending an offline update, so the main window still had
+the rig online, and the new FlexTransceiver has no `last_set_frequency_`.
+A normal launch was fine (`applying after start`).
+
+Fixes:
+- `FlexTransceiver::do_ptt`: wait 3 s (was 1 s) for the `xmit 1` reply; a miss
+  sends `xmit 0`, stops the DAX TX audio, reports PTT off and leaves the link up.
+  Only three misses in a row (`key_failures_`) set the error and reconnect.
+- `MainWindow::guiUpdate`: a Flex key-up still not confirmed halfway through the
+  period releases PTT (`g_iptt=0`) with Tx left enabled, so the next cycle keys
+  again; status bar "FlexRadio did not key - trying again next cycle".
+- `MainWindow::handle_transceiver_failure`: for FlexRadio VITA, mark `m_rigState`
+  offline, so the reconnect goes through the same restore as a launch.
+- `tools/fake_flex.py`: `FAKE_XMIT_MISS=N` leaves the first N key-ups unanswered;
+  `tools/flex_keymiss_test.sh` (throwaway `-r flexkm`, port 4994, `FAKE_GUI_SLICE`).
+
+Tested on the fake radio (bundle build of this change): MISS=1 -> one over skipped,
+no reconnect, the next three overs keyed on 21.074; MISS=3 -> three skipped, one
+reconnect, the new slice tuned straight back to 21.074, no Tx on 14.100. After a
+real failure (three misses) Tx is halted as for every rig error (Enable Tx off),
+unchanged. Not yet tried on the real radio. Why the 6600 sometimes takes >1 s to
+answer `xmit 1` is not known.
 
 ### 2026-10-22 — 0.7.6-rc6: rc5 plus the Flex warning fix, short Flex status, Background highlight everywhere, 160m crossband with India (test build)
 
@@ -4242,7 +4276,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 
 ## Open items
 
-- [ ] **v0.7.6 (2026-10-22):** rc6 is the current test build. Waiting on KK4CDK to
+- [ ] **v0.7.6 (2026-10-22):** rc7 (local) adds the Flex key-up / 14.100 fix - try it
+      on the FLEX-6600 (watch `flex_trace.txt` for "xmit 1 not confirmed"); rc6 is the
+      last pre-release. Waiting on KK4CDK to
       try rc5/rc6 (double-click keeps calling, LoTW Fetch Now). Manoj to try on air:
       India crossband (Misc menu, needs Split), Background highlight off on Tx lines
       and the marker cell, Ignore CALL, no repeat logging, TCI reconnect / refused
