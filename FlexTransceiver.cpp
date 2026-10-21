@@ -580,6 +580,49 @@ bool FlexTransceiver::bind_to_gui_client ()
   return true;
 }
 
+// JTDX-VU: our previous session on this radio, if it still holds one. When the
+// network changes under a session (the computer's address moved, 2026-10-21)
+// the radio keeps it - keyed, if it was mid-over: our unkey went out from the
+// address that no longer exists, and the 6600 stayed in TX ~53 s until it was
+// restarted. A new session closes the old one (ours only: same handle, program
+// JTDX-VU), which unkeys the radio and frees its GUI client place and slice.
+namespace
+{
+  quint32 last_handle {0};
+  QString last_host;
+}
+
+void FlexTransceiver::drop_stale_session ()
+{
+  quint32 const old = last_handle;
+  bool const same_radio = last_host == host_;
+  last_handle = handle_;
+  last_host = host_;
+  if (!old || old == handle_ || !same_radio) return;
+  QRegularExpression const con {"\\|client 0x([0-9A-Fa-f]+) connected .*\\bprogram=JTDX-VU\\b"};
+  QRegularExpression const dis {"\\|client 0x([0-9A-Fa-f]+) disconnected"};
+  QElapsedTimer t; t.start ();
+  bool held = false;
+  while (connected_ && t.elapsed () < 1000)
+    {
+      held = false;
+      for (auto const& l : status_log_)
+        {
+          auto const m = con.match (l);
+          if (m.hasMatch () && m.captured (1).toUInt (nullptr, 16) == old) held = true;
+          auto const d = dis.match (l);
+          if (d.hasMatch () && d.captured (1).toUInt (nullptr, 16) == old) held = false;
+        }
+      if (held) break;
+      wait_ms (100);
+    }
+  if (!held) return;
+  int const seq = send ("client disconnect 0x" + QString::number (old, 16).toUpper ().rightJustified (8, '0'));
+  bool const ok = wait_reply (seq, 2000) && replies_.value (seq).first == 0;
+  trace (QString ("our previous session 0x%1 was still on the radio - %2").arg (old, 0, 16)
+         .arg (ok ? "closed it" : QString ("close refused (0x%1)").arg (replies_.value (seq).first, 0, 16)));
+}
+
 // The start-up, measured against a FLEX-6600 (MSHV-Mac): the radio volunteers
 // V and H on connect; "client gui" is what makes it show and grant slices;
 // "client udpport" must name a socket already bound; "dax audio set" routes a
@@ -595,6 +638,7 @@ bool FlexTransceiver::start_session ()
   if (!handle_) {error_ = tr ("Flex: the radio sent no client handle"); return false;}
 
   send ("sub client all");                      // the other clients, with the client_id a non-GUI client binds to
+  drop_stale_session ();                        // before "client gui": the stale one may hold a GUI place
   bound_handle_ = 0;
   client_id_ = QUuid::createUuid ().toString (QUuid::WithoutBraces);
   int seq = send ("client gui " + client_id_);
@@ -971,7 +1015,14 @@ void FlexTransceiver::do_ptt (bool on)
   else
     {
       int const seq = send ("xmit 0");
-      wait_reply (seq, 1000);
+      // an unkey the radio does not confirm may have been lost with a dead link,
+      // the radio still keyed: reconnect now - the new session closes this one,
+      // which unkeys it - rather than when the audio watchdog notices (~15 s)
+      if (!wait_reply (seq, 2000) && error_.isEmpty ())
+        {
+          trace ("!! xmit 0 not confirmed - reconnecting so the radio is unkeyed");
+          error_ = tr ("Flex: unkey not confirmed");
+        }
       // stop the DAX audio on unkey: a stream still flowing holds the radio in
       // UNKEY_REQUESTED at full power (MSHV-Mac, 2026-09-08)
       tx_audio (false);

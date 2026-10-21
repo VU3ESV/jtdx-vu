@@ -151,6 +151,7 @@ private:
   QString client_id_;                // our client id, sent with "client gui" as SmartSDR does, so others can bind to us
   QString owner_hex () const;        // "client_handle=0x..." of whoever owns our slice: the GUI client we joined, else us
   bool bind_to_gui_client ();        // the radio's two-GUI-client limit: join an existing GUI client's station
+  void drop_stale_session ();        // close our previous session if the radio still holds it
   bool connected_;
   bool ready_;
   QString model_;

@@ -377,7 +377,9 @@ or Pi 5 is recommended.
   you were on (both since v0.7.5). A key-up the radio is slow to confirm
   (over 3 s) skips just that over and keys again next cycle; only three in a
   row reconnect, and any reconnect goes back to your frequency instead of the
-  radio's default 14.100 slice (since v0.7.6). One
+  radio's default 14.100 slice. If the link dies mid-over (the computer's
+  address changed), the unkey is lost: JTDX-VU reconnects at once and closes
+  its old session, which unkeys the radio (both since v0.7.6). One
   API session, so the radio's relays click once per over. Ported from the
   MSHV-Mac backend. No split: use Fake It or None. The TX slider is the
   radio's RF power (it follows the radio, which keeps power per band; while

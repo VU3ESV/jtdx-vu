@@ -283,7 +283,7 @@ Last updated: 2026-10-22
 
 ## What changed
 
-### 2026-10-22 — 0.7.6-rc7: Flex key-up miss no longer QSYs to 14.100 and calls CQ there
+### 2026-10-22 — 0.7.6-rc7: Flex key-up miss no longer QSYs to 14.100 and calls CQ there; a dead session no longer holds the radio keyed
 
 On air with the FLEX-6600 on 30m, rc5 and rc6 jumped to **14.100** three times
 (2026-10-21 18:42, 21:54 and 22:05 UTC) and, with Tx on, sent CQ there (the
@@ -308,6 +308,27 @@ Fixes:
   offline, so the reconnect goes through the same restore as a launch.
 - `tools/fake_flex.py`: `FAKE_XMIT_MISS=N` leaves the first N key-ups unanswered;
   `tools/flex_keymiss_test.sh` (throwaway `-r flexkm`, port 4994, `FAKE_GUI_SLICE`).
+
+Same evening, a second rc7 change: **the radio stuck in TX.** Manoj moved the Mac
+mini's cable (switch port 8 → 4, see vlan-setup HANDOVER) in the middle of an over;
+its address changed .1.222 → .10.226, the `xmit 0` went out on the dead session, and
+the FLEX-6600 stayed TRANSMITTING (owned by the dead client 0x034D99CE) ~53 s, through
+JTDX-VU's reconnect, until Manoj restarted the radio. Fixes:
+- `FlexTransceiver::drop_stale_session` (in `start_session`, after `sub client all`,
+  before `client gui`): the previous handle and host are remembered across sessions;
+  if the radio still lists that handle as a connected `program=JTDX-VU` client,
+  `client disconnect 0x<handle>` closes it - which unkeys the radio and frees its
+  GUI place and slice. Only our own previous session is ever closed.
+- `do_ptt (false)`: an `xmit 0` not confirmed within 2 s sets "Flex: unkey not
+  confirmed" and reconnects at once (was: ignored, then the 10 s audio watchdog).
+- `tools/fake_flex.py`: `FAKE_FREEZE_KEYED=1` turns the first client that keys into
+  a dead peer (nothing in or out, its close unseen, held keyed until `client
+  disconnect` or 120 s); `client disconnect` is implemented.
+  `tools/flex_stale_tx_test.sh` (throwaway `-r flexst`, port 4995).
+  Result: keyed 22:36:15, unkey lost 22:36:28.7, reconnect + old session closed,
+  "TX released" 22:36:36.8 (8 s; 30 s with the watchdog only), back on 21.074.
+  Not tried on the real radio: `client disconnect <handle>` is SmartSDR API as
+  FlexLib uses it, but this firmware's reply is unchecked.
 
 Tested on the fake radio (bundle build of this change): MISS=1 -> one over skipped,
 no reconnect, the next three overs keyed on 21.074; MISS=3 -> three skipped, one
@@ -4277,8 +4298,9 @@ must carry it. Text entry, Send, F1–F8 templates. Then credits/README.
 ## Open items
 
 - [ ] **v0.7.6 (2026-10-22):** rc7 (local) adds the Flex key-up / 14.100 fix - try it
-      on the FLEX-6600 (watch `flex_trace.txt` for "xmit 1 not confirmed"); rc6 is the
-      last pre-release. Waiting on KK4CDK to
+      on the FLEX-6600 (watch `flex_trace.txt` for "xmit 1 not confirmed", "previous
+      session ... closed it"); rc6 is the last pre-release. The Flex stalls stopped?
+      (Mac mini back on its Trusted port 4 since 2026-10-21 22:25 UTC.) Waiting on KK4CDK to
       try rc5/rc6 (double-click keeps calling, LoTW Fetch Now). Manoj to try on air:
       India crossband (Misc menu, needs Split), Background highlight off on Tx lines
       and the marker cell, Ignore CALL, no repeat logging, TCI reconnect / refused

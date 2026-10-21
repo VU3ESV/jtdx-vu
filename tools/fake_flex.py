@@ -66,6 +66,7 @@ def status(sock, text, h=None):
 
 def broadcast(text, h=0):
     for cl in list(state["clients"].values()):
+        if cl.get("frozen"): continue
         try: status(cl["sock"], text, h)
         except OSError: pass
 
@@ -100,7 +101,8 @@ def serve(c, a):
     with lock:
         h = state["next_handle"]; state["next_handle"] += 1
         cl = state["clients"][h] = {"sock": c, "gui": False, "client_id": None, "bound": 0, "program": "", "station": "",
-                                    "udpport": 0, "peer": c.getpeername()[0], "rx_stream": 0, "tx_stream": 0}
+                                    "udpport": 0, "peer": c.getpeername()[0], "rx_stream": 0, "tx_stream": 0,
+                                    "frozen": False, "kill": threading.Event()}
         SOCK_H[c] = h
     c.sendall(b"V1.4.0.0\n" + ("H%08X\n" % h).encode())
     logw("client 0x%08X connected" % h)
@@ -109,6 +111,12 @@ def serve(c, a):
         while True:
             d = c.recv(4096)
             if not d: break
+            # FAKE_FREEZE_KEYED=1: the first client to key becomes a dead peer, as when
+            # the computer's address changed mid-over (2026-10-21): nothing it sends
+            # arrives (its unkey is lost), nothing reaches it, and its close is never
+            # seen - the radio holds the session, keyed, until "client disconnect"
+            if cl["frozen"]:
+                logw("dropped from frozen 0x%08X: %s" % (h, d.decode(errors="replace").strip()[:80])); continue
             buf += d
             while b"\n" in buf:
                 line, buf = buf.split(b"\n", 1)
@@ -228,12 +236,26 @@ def serve(c, a):
                         if sid == cl["tx_stream"]:
                             cl["tx_stream"] = 0
                             if STATION_TX: extra.append("stream 0x%08X removed" % sid)
+                    elif p[0] == "client" and p[1] == "disconnect":
+                        t = int(p[2], 16) if len(p) > 2 else 0
+                        if t in state["clients"] and t != h:
+                            state["clients"][t]["kill"].set()
+                            try: state["clients"][t]["sock"].shutdown(socket.SHUT_RDWR)
+                            except OSError: pass
+                            logw("client 0x%08X disconnected by 0x%08X" % (t, h))
+                        else: code = "50000016"
                     elif p[0] == "xmit":
                         # FAKE_XMIT_MISS=N: the first N key-ups are never answered and do not
                         # key (the 6600 left one unanswered for over 1 s, 2026-10-21)
                         if int(p[1]) and state["xmit_missed"] < int(os.environ.get("FAKE_XMIT_MISS", "0")):
                             state["xmit_missed"] += 1; logw("< %s  [0x%08X]  (not answered, miss %d)" % (cmd, h, state["xmit_missed"])); continue
                         state["xmit"] = int(p[1]); extra.append("interlock state=%s" % ("TRANSMITTING" if state["xmit"] else "READY"))
+                        if state["xmit"]:
+                            state["xmit_owner"] = h
+                            if os.environ.get("FAKE_FREEZE_KEYED") and not state.get("froze"):
+                                state["froze"] = True; cl["frozen"] = True
+                                logw("< %s  [0x%08X]" % (cmd, h)); c.sendall(("R%s|0|\n" % seq).encode())
+                                logw("client 0x%08X frozen while keyed" % h); continue
                 logw("< %s  [0x%08X]" % (cmd, h))
                 c.sendall(("R%s|%s|%s\n" % (seq, code, body)).encode())
                 for e in extra:
@@ -241,7 +263,10 @@ def serve(c, a):
                     else: status(c, e, h)
     except OSError:
         pass
+    if cl["frozen"] and not cl["kill"].wait(120): logw("frozen 0x%08X timed out" % h)
     with lock:
+        if state.get("xmit_owner") == h and state["xmit"]:
+            state["xmit"] = 0; logw("TX released: 0x%08X gone" % h)
         state["clients"].pop(h, None); SOCK_H.pop(c, None)
         gone = [n for n, s in state["slices"].items() if s["owner"] == h]   # a station closes with its GUI client
         for n in gone: state["slices"].pop(n)
@@ -349,7 +374,7 @@ def main():
         bt = t0 + n * dt
         delay = bt - time.time()
         if delay > 0: time.sleep(delay)
-        with lock: targets = [(x["rx_stream"], x["udpport"], x["peer"]) for x in state["clients"].values() if x["rx_stream"] and x["udpport"]]
+        with lock: targets = [(x["rx_stream"], x["udpport"], x["peer"]) for x in state["clients"].values() if x["rx_stream"] and x["udpport"] and not x["frozen"]]
         # FAKE_NO_AUDIO: control works, no VITA-49 ever arrives - a firewall or a
         # VPN dropping the radio's UDP (KK4CDK, VU2OY, 2026-10-10)
         if targets and not os.environ.get("FAKE_NO_AUDIO"):
