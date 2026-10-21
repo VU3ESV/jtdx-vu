@@ -26,15 +26,6 @@ namespace
     return l;
   }
   void cmd (QString const& c) {FlexShared::instance ().command (c);}
-  // JTDX-VU: a long status or refusal wraps inside the panel instead of
-  // widening it (Ignored: the label takes the layout's width, not its text's)
-  void wrap (QLabel * l)
-  {
-    QSizePolicy sp {QSizePolicy::Ignored, QSizePolicy::Preferred};
-    sp.setHeightForWidth (true);
-    l->setSizePolicy (sp);
-    l->setWordWrap (true);
-  }
 }
 
 FlexPanel::FlexPanel (QSettings * settings, std::function<QString (qint64)> band_of, QWidget * parent)
@@ -59,10 +50,6 @@ FlexPanel::FlexPanel (QSettings * settings, std::function<QString (qint64)> band
   V->setSpacing (2);
   l_conn_ = new QLabel;
   l_conn_->setAlignment (Qt::AlignCenter);
-  wrap (l_conn_);
-  // the status no longer sets the width (it wraps), so keep the panel wide
-  // enough for its usual line ("Slice A, DAX channel 1, transmit")
-  setMinimumWidth (fontMetrics ().horizontalAdvance (QStringLiteral ("Slice A, DAX channel 1, transmit on the station")) + 24);
   V->addWidget (l_conn_);
 
   auto gb_m = new QGroupBox {tr ("Radio meters")};
@@ -119,7 +106,6 @@ FlexPanel::FlexPanel (QSettings * settings, std::function<QString (qint64)> band
   auto T = new QGridLayout {gb_atu_};
   T->setContentsMargins (6, 2, 6, 2); T->setVerticalSpacing (1); T->setHorizontalSpacing (6);
   l_atu_ = value_label ();
-  wrap (l_atu_);
   pb_atu_tune_ = new QPushButton {tr ("Tune")};
   pb_atu_bypass_ = new QPushButton {tr ("Bypass")};
   cb_atu_mem_ = new QCheckBox {tr ("Memories")};
@@ -145,7 +131,6 @@ FlexPanel::FlexPanel (QSettings * settings, std::function<QString (qint64)> band
                                  "Line-out, headphones and the DAX audio JTDX-VU decodes are unaffected."));
   A->addWidget (cb_localmute_);
   l_model_ = new QLabel;
-  wrap (l_model_);
   A->addWidget (l_model_);
   V->addWidget (gb_a);
 

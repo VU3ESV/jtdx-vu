@@ -1166,9 +1166,9 @@ void FlexTransceiver::parse_meters (char const * buf, int len)
 void FlexTransceiver::publish_status ()
 {
   QString const line = QString ("Slice %1, DAX channel %2%3").arg (QChar ('A' + slice_letter_)).arg (dax_ch_)
-    .arg (tx_refused_ ? tr (", radio takes no DAX TX from this copy: no transmit audio")
-          : tx_borrowed_ ? tr (", transmit on the station's DAX TX") : tx_dax_ ? tr (", transmit")
-          : tci_audio_ ? tr (", no DAX TX stream: no transmit audio") : tr (", receive only"));
+    .arg (tx_refused_ ? tr (", no TX audio")
+          : tx_borrowed_ ? tr (", transmit (station's)") : tx_dax_ ? tr (", transmit")
+          : tci_audio_ ? tr (", no TX audio") : tr (", receive only"));
   FlexShared::instance ().update ([&] (FlexStatus & st) {
       st.up = ready_ && connected_;
       st.status = line;
