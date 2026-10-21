@@ -192,14 +192,29 @@ void DisplayText::insertLineSpacer(QString const& line)
     appendText (line, Radio::convert_dark("#d3d3d3",useDarkStyle_), Radio::convert_dark("#000000",useDarkStyle_), 0, " ", Radio::convert_dark("#000000",useDarkStyle_), " ", true);
 }
 
-void DisplayText::appendText(QString const& text, QString const& bg, QString const& color, int std_type, QString const& servis, QString const& servis_color, QString const& cntry, bool forceBold, bool strikethrough, bool underlined, bool DXped, bool overwrite, bool wanted)
+void DisplayText::appendText(QString const& text, QString const& bg_in, QString const& color_in, int std_type, QString const& servis, QString const& servis_color_in, QString const& cntry, bool forceBold, bool strikethrough, bool underlined, bool DXped, bool overwrite, bool wanted)
 {
     QString servbg, s;
+    QString bg = bg_in, color = color_in, servis_color = servis_color_in;
     if (std_type == 2) servbg = Radio::convert_dark("#ff0000",useDarkStyle_);
     else if (std_type == 5) servbg = Radio::convert_dark("#0000ff",useDarkStyle_);
     else if (servis == "?") servbg = Radio::convert_dark("#ffff00",useDarkStyle_);
     else if (std_type == 3 && servis.length()>1) servbg = servis.mid(1);
     else servbg = Radio::convert_dark("#ffffff",useDarkStyle_);
+    if (!displayBackground_) {
+        // JTDX-VU: Background highlight off means no coloured background
+        // anywhere - also our own Tx lines, QSY lines and the marker cell
+        // before the country. Their colour goes on the text instead (decode
+        // lines arrive already converted by displayDecodedText).
+        QString const plain = Radio::convert_dark("#ffffff",useDarkStyle_);
+        auto readable = [this] (QString const& name) {
+            QColor c {name};
+            if (useDarkStyle_ && c.isValid() && c.lightness() < 150) c.setHsl(c.hslHue(), c.hslSaturation(), 150);
+            return c.name();
+        };
+        if (bg != plain) { color = readable (bg); bg = plain; }
+        if (servbg != plain) { servis_color = readable (servbg); servbg = plain; }
+    }
     auto cursor = textCursor ();
     if (scroll_) {
         if (document ()->blockCount() == 10000) {

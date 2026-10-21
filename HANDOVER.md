@@ -279,6 +279,21 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-22 — Background highlight off now means no background anywhere (for the next build)
+
+Manoj: "how to remove background highlight for my call? ... or for anything
+in this messages/markers?" (Background highlight already off). That switch
+(`highlightBackground_`, 2026-10-04) was applied only in
+`displayDecodedText`; three things still painted a background: our own Tx
+lines (`displayTransmittedText`, bg = My Tx colour), QSY lines (pink), and
+the marker cell before the country (`appendText`'s `servbg`: red for my call
+std_type 2, blue std_type 5, yellow "?", the "new" colour on std_type 3).
+Now `appendText` (every line goes through it), with the switch off, moves any
+non-plain line background to the text colour and the marker cell's colour to
+the marker character, lifted to lightness 150 in dark style as the decode
+lines are. Decode lines arrive already plain, so they are unchanged. Default
+on, so nothing changes for anyone with it on. Builds; not checked on screen.
+
 ### 2026-10-22 — Flex "refused DAX TX" warning was a false alarm on a working radio; now from the stream's tx= flag (for the next build)
 
 Manoj (FLEX-6600, one copy, Slice A, rc5): the Flex panel said "radio refused

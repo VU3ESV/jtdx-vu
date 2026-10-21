@@ -199,7 +199,11 @@ or Pi 5 is recommended.
 - **Notifications page redesigned** (since v0.6.0): one row per kind of
   "new" in priority order, each with its band / mode checks, colour squares
   and beep on one line, plus "Already worked", "Messages and markers" and a
-  live preview.
+  live preview. **Background highlight** (since v0.6.0) off keeps the
+  decode pane's background plain and puts the highlight colour on the text;
+  since the next build that also covers your own Tx lines, QSY lines and
+  the marker cell before the country (red for your call, blue for your QSO
+  partner, the "new" colour on other stations' messages).
 - **AutoSeq goes for what your log needs first** (since v0.6.0). Always
   on, no switch: when picking a CQ to answer, and when choosing between
   stations calling your CQ, AutoSeq takes a **new DXCC** first, then a
