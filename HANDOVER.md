@@ -279,6 +279,15 @@ Last updated: 2026-10-19
 
 ## What changed
 
+### 2026-10-22 — 0.7.6-rc6: rc5 plus the Flex warning fix, short Flex status, Background highlight everywhere, 160m crossband with India (test build)
+
+Manoj: "make rc6". `Versions.cmake` 0.7.6-rc5 -> rc6. rc6 = rc5 + `2f98b9f0`
+(Flex warning from the stream's tx= flag; rc4/rc5 warned falsely on a working
+radio) + `a4204703`/`2f7c32a3` (Flex panel: old layout, short status texts) +
+`fc4c49bb` (Background highlight off covers Tx lines, QSY lines, the marker
+cell) + `7f49d3d1` (Misc > Crossband 160m operation with India). No Fortran
+changed. Local macOS build clean. GitHub pre-release `v0.7.6-rc6`.
+
 ### 2026-10-22 — 160m crossband with India (for the next build)
 
 Manoj: "add a crossband op option with India. Rx 1808/Tx 1840, if op call is
