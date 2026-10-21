@@ -295,6 +295,13 @@ from this copy: no transmit audio", the same status-bar warning). The key-up
 `on_reply_` is gone. `tools/fake_flex.py` reports tx=1, so its self-tests stay
 quiet. Builds; checked against both real traces by reading, not run on a
 radio.
+- **Panel width:** that long status line widened the Flex panel (Manoj's
+  screenshot). `flexpanel.cpp` `wrap()`: the status, ATU status and model
+  labels word-wrap with a horizontally Ignored size policy (height for
+  width), and the panel's minimum width is now set from the font (the usual
+  "Slice A, DAX channel 1, transmit on the station" line + margins), since
+  the status no longer sets it. Checked with a scratch harness (FlexPanel
+  alone, the long warning): 268 px wide, the warning on two lines.
 
 ### 2026-10-20 — 0.7.6-rc5: rc4 plus double-click keeps calling a busy station (test build)
 
